@@ -176,9 +176,9 @@ bl_havstein = [63.406818270, 10.377168783, 171.020]
 
 # UTM-koordinater for aktuelle punkt: sted = [N, E] (EUREF89)
 
-UTM_moholt = koorkon.latLonToUTM(bl_moholt[0], bl_moholt[1])
-UTM_st46 = koorkon.latLonToUTM(bl_st46[0], bl_st46[1])
-UTM_tp342 = koorkon.latLonToUTM(bl_tp342[0], bl_tp342[1])
+UTM_moholt = koorkon.LatLonToUTM(bl_moholt[0], bl_moholt[1])
+UTM_st46 = koorkon.LatLonToUTM(bl_st46[0], bl_st46[1])
+UTM_tp342 = koorkon.LatLonToUTM(bl_tp342[0], bl_tp342[1])
 
 # EUREF-data
 
