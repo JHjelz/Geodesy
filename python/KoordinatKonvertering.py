@@ -68,7 +68,8 @@ def CartesianToLatLon(x, y, z):
 
 def  latLonToUTM(br, le):
     """
-    Funksjon som tar inn bredde- og lengdegrad, i tillegg til UTM-sonen en skal til
+    Funksjon som tar inn bredde- og lengdegrad og
+    returnerer UTM-koordinater i riktig sone
     """
 
     # Gjør om til rad:
