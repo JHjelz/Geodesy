@@ -10,7 +10,7 @@ import KoordinatKonvertering as koorkon
 
 side = "hoved"
 valgHoved = ['1', '2', 'avslutt']
-valgKoor = ['1', '2', '3', '4', '5', '6', 'tilbake', 'avslutt']
+valgKoor = ['a', 'b', 'c', 'd', 'e', 'f', 'tilbake', 'avslutt']
 jaNei = ['J', 'N']
 systemvalg = ['WGS84', 'ED50', 'ED87', 'NGO1948']
 
@@ -36,6 +36,64 @@ def gyldigTall(n):
     except:
         return False
     return True
+
+def giInnTall(streng):
+    value = input(streng + ": ")
+    side = avslutteEllerTilbake_2(value)
+    
+    if (side == 'hoved'):
+        return value, 'avslutt'
+    elif (side == "tilbake"):
+        return value, 'tilbake'
+    
+    while (not gyldigTall(value)):
+        value = input("Ikke gyldig tall! " + streng + ": ")
+        side = avslutteEllerTilbake_2(value)
+        if (side == 'hoved'):
+            return value, 'avslutt'
+        elif (side == "tilbake"):
+            return value, 'tilbake'
+    
+    return value, 'fortsett'
+
+def giInnJaNei():
+    valg = input("Ønsker du et annet system enn EUREF89? (J/N) ")
+    side = avslutteEllerTilbake_2(valg)
+    
+    if (side == 'hoved'):
+        return valg, 'avslutt'
+    elif (side == "tilbake"):
+        return valg, 'tilbake'
+    
+    while (valg not in jaNei):
+        valg = input("J/N: ")
+        side = avslutteEllerTilbake_2(valg)
+        if (side == 'hoved'):
+            return valg, 'avslutt'
+        elif (side == "tilbake"):
+            return valg, 'tilbake'
+    
+    return valg, 'fortsatt'
+
+def giInnSystem():
+    print("Velg mellom følgende system: 'WGS84', 'ED50'/'ED87' eller 'NGO1948'.")
+    system = input("System: ")
+    side = avslutteEllerTilbake_2(system)
+    
+    if (side == 'hoved'):
+        return system, 'avslutt'
+    elif (side == "tilbake"):
+        return system, 'tilbake'
+    
+    while (system not in systemvalg):
+        system = input("Ugyldig system! System: ")
+        side = avslutteEllerTilbake_2(system)
+        if (side == 'hoved'):
+            return system, 'avslutt'
+        elif (side == "tilbake"):
+            return system, 'tilbake'
+    
+    return system, 'fortsett'
 
 # Program:
 
@@ -84,23 +142,21 @@ while (bruker != 'avslutt'):
     ###################################
 
     while (side == 'Koordinatkonverterer'):
-        print("""\nDu valgte '2'.
-
-Her kan du konvertere mellom ulike typer koordinater i gitte system.
+        print("""\nHer kan du konvertere mellom ulike typer koordinater i gitte system.
 
 Typene du kan velge mellom er: kartesiske koordinater, bredde- og lengdegrad, og UTM-koordinater.
 Systemene du kan velge mellom er: EUREF89, WGS84, ED50/ED87 og NGO1948 (EUREF89 er forhåndsinnstilt)
 
 Du har følgende valg:
 
-[1] Kartesiske koordinater til bredde- og lengdegrad
-[2] Kartesiske koordinater til UTM-koordinater
-[3] Bredde- og lengdegrad til UTM-koordinater
-[4] Bredde- og lengdegrad til kartesiske koordinater
-[5] UTM-koordinater til bredde- og lengdegrad
-[6] UTM-koordinater til kartesiske koordinater
+[a] Kartesiske koordinater til bredde- og lengdegrad
+[b] Kartesiske koordinater til UTM-koordinater
+[c] Bredde- og lengdegrad til UTM-koordinater
+[d] Bredde- og lengdegrad til kartesiske koordinater
+[e] UTM-koordinater til bredde- og lengdegrad
+[f] UTM-koordinater til kartesiske koordinater
 
-Skriv inn ønsket handling som et tall i input-feltet.
+Skriv inn ønsket handling som en bokstav i input-feltet.
         """)
         
         bruker = input("Jeg vil utføre handling: ")
@@ -110,134 +166,55 @@ Skriv inn ønsket handling som et tall i input-feltet.
             bruker = input("Jeg vil utføre handling: ")
 
         side = avslutteEllerTilbake(bruker)
-
-        ###################################
-        # TODO: Prøv å se om det går an å minske mengden kode ved å samle mye av det som går igjen i funksjoner
-        ###################################
-
+        
         if (bruker == '1'):
             print("""
 Du skal nå konvertere kartesiske koordinater (x,y,z) til lengde- og breddegrad.
 Skriv inn verdiene du vil konvertere:
 """)
-            x = input("x-verdi: ")
-            side = avslutteEllerTilbake_2(x)
-            if (side == 'hoved'):
-                bruker = x
+            x, handling = giInnTall('X-verdi')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
-            while (not gyldigTall(x)):
-                x = input("Ikke gyldig tall! X-verdi: ")
-                side = avslutteEllerTilbake_2(x)
-                if (side == 'hoved'):
-                    bruker = x
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
+            
+            y, handling = giInnTall('Y-verdi')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
+                side = "Koordinatkonverterer"
+                break
+            
+            z, handling = giInnTall('Z-verdi')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
+                break
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
 
-            y = input("y-verdi: ")
-            side = avslutteEllerTilbake_2(y)
-            if (side == 'hoved'):
-                bruker = y
+            valg, handling = giInnJaNei()
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(y)):
-                y = input("Ikke gyldig tall! Y-verdi: ")
-                side = avslutteEllerTilbake_2(y)
-                if (side == 'hoved'):
-                    bruker = y
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
             
-            z = input("z-verdi: ")
-            side = avslutteEllerTilbake_2(z)
-            if (side == 'hoved'):
-                bruker = z
-                break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(z)):
-                z = input("Ikke gyldig tall! Z-verdi: ")
-                side = avslutteEllerTilbake_2(z)
-                if (side == 'hoved'):
-                    bruker = z
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
-            
-            valg = input("Ønsker du et annet system enn EUREF89? (J/N) ")
-            side = avslutteEllerTilbake_2(valg)
-            if (side == 'hoved'):
-                bruker = valg
-                break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
             system = ""
-            while (valg not in jaNei):
-                valg = input("J/N: ")
-                side = avslutteEllerTilbake_2(valg)
-                if (side == 'hoved'):
-                    bruker = valg
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
-            
+
             if (valg == "J"):
-                print("Velg mellom følgende system: 'WGS84', 'ED50'/'ED87' eller 'NGO1948'.")
-                system = input("System: ")
-                side = avslutteEllerTilbake_2(system)
-                if (side == 'hoved'):
-                    bruker = system
+                system, handling = giInnSystem()
+                if (handling == 'avslutt'):
+                    side, bruker = "hoved", "avslutt"
                     break
-                elif (side == "tilbake"):
+                elif (handling == 'tilbake'):
                     side = "Koordinatkonverterer"
                     break
-                while (system not in systemvalg):
-                    system = input("Ugyldig system! System: ")
-                    side = avslutteEllerTilbake_2(system)
-                    if (side == 'hoved'):
-                        bruker = system
-                        break
-                    elif (side == "tilbake"):
-                        side = "Koordinatkonverterer_exit"
-                        break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
-
+            
             if (system == ""):
                 resultat = koorkon.CartesianToLatLon(float(x), float(y), float(z))
             else:
@@ -254,123 +231,48 @@ Skriv inn verdiene du vil konvertere:
 Du skal nå konvertere kartesiske koordinater (x,y,z) til UTM-koordinater.
 Skriv inn verdiene du vil konvertere:
 """)
-            x = input("x-verdi: ")
-            side = avslutteEllerTilbake_2(x)
-            if (side == 'hoved'):
-                bruker = x
+            x, handling = giInnTall('X-verdi')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(x)):
-                x = input("Ikke gyldig tall! X-verdi: ")
-                side = avslutteEllerTilbake_2(x)
-                if (side == 'hoved'):
-                    bruker = x
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
 
-            y = input("y-verdi: ")
-            side = avslutteEllerTilbake_2(y)
-            if (side == 'hoved'):
-                bruker = y
+            y, handling = giInnTall('Y-verdi')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
-            while (not gyldigTall(y)):
-                y = input("Ikke gyldig tall! Y-verdi: ")
-                side = avslutteEllerTilbake_2(y)
-                if (side == 'hoved'):
-                    bruker = y
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
+
+            z, handling = giInnTall('Z-verdi')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
             
-            z = input("z-verdi: ")
-            side = avslutteEllerTilbake_2(z)
-            if (side == 'hoved'):
-                bruker = z
+            valg, handling = giInnJaNei()
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(z)):
-                z = input("Ikke gyldig tall! Z-verdi: ")
-                side = avslutteEllerTilbake_2(z)
-                if (side == 'hoved'):
-                    bruker = z
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
             
-            valg = input("Ønsker du et annet system enn EUREF89? (J/N) ")
-            side = avslutteEllerTilbake_2(valg)
-            if (side == 'hoved'):
-                bruker = valg
-                break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
             system = ""
-            while (valg not in jaNei):
-                valg = input("J/N: ")
-                side = avslutteEllerTilbake_2(valg)
-                if (side == 'hoved'):
-                    bruker = valg
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
             
             if (valg == "J"):
-                print("Velg mellom følgende system: 'WGS84', 'ED50'/'ED87' eller 'NGO1948'.")
-                system = input("System: ")
-                side = avslutteEllerTilbake_2(system)
-                if (side == 'hoved'):
-                    bruker = system
+                system, handling = giInnSystem()
+                if (handling == 'avslutt'):
+                    side, bruker = "hoved", "avslutt"
                     break
-                elif (side == "tilbake"):
+                elif (handling == 'tilbake'):
                     side = "Koordinatkonverterer"
                     break
-                while (system not in systemvalg):
-                    system = input("Ugyldig system! System: ")
-                    side = avslutteEllerTilbake_2(system)
-                    if (side == 'hoved'):
-                        bruker = system
-                        break
-                    elif (side == "tilbake"):
-                        side = "Koordinatkonverterer_exit"
-                        break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
 
             if (system == ""):
                 resultat = koorkon.CartesianToUTM(float(x), float(y), float(z))
@@ -388,100 +290,40 @@ Skriv inn verdiene du vil konvertere:
 Du skal nå konvertere bredde- og lengdegrader (B, L, h) til UTM-koordinater.
 Skriv inn verdiene du vil konvertere:
 """)
-            B = input("Breddegrad: ")
-            side = avslutteEllerTilbake_2(B)
-            if (side == 'hoved'):
-                bruker = B
+            B, handling = giInnTall('Breddegrad')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(B)):
-                B = input("Ikke gyldig tall! Breddegrad: ")
-                side = avslutteEllerTilbake_2(B)
-                if (side == 'hoved'):
-                    bruker = B
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
 
-            L = input("Lengdegrad: ")
-            side = avslutteEllerTilbake_2(L)
-            if (side == 'hoved'):
-                bruker = L
+            L, handling = giInnTall('Lengdegrad')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(L)):
-                L = input("Ikke gyldig tall! Lengdegrad: ")
-                side = avslutteEllerTilbake_2(L)
-                if (side == 'hoved'):
-                    bruker = L
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
             
-            valg = input("Ønsker du et annet system enn EUREF89? (J/N) ")
-            side = avslutteEllerTilbake_2(valg)
-            if (side == 'hoved'):
-                bruker = valg
+            valg, handling = giInnJaNei()
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
+            
             system = ""
-            while (valg not in jaNei):
-                valg = input("J/N: ")
-                side = avslutteEllerTilbake_2(valg)
-                if (side == 'hoved'):
-                    bruker = valg
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
             
             if (valg == "J"):
-                print("Velg mellom følgende system: 'WGS84', 'ED50'/'ED87' eller 'NGO1948'.")
-                system = input("System: ")
-                side = avslutteEllerTilbake_2(system)
-                if (side == 'hoved'):
-                    bruker = system
+                system, handling = giInnSystem()
+                if (handling == 'avslutt'):
+                    side, bruker = "hoved", "avslutt"
                     break
-                elif (side == "tilbake"):
+                elif (handling == 'tilbake'):
                     side = "Koordinatkonverterer"
                     break
-                while (system not in systemvalg):
-                    system = input("Ugyldig system! System: ")
-                    side = avslutteEllerTilbake_2(system)
-                    if (side == 'hoved'):
-                        bruker = system
-                        break
-                    elif (side == "tilbake"):
-                        side = "Koordinatkonverterer_exit"
-                        break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
 
             if (system == ""):
                 resultat = koorkon.LatLonToUTM(float(B), float(L))
@@ -499,123 +341,48 @@ Skriv inn verdiene du vil konvertere:
 Du skal nå konvertere bredde- og lengdegrader (B, L, h) til kartesiske koordinater.
 Skriv inn verdiene du vil konvertere:
 """)
-            B = input("Breddegrad: ")
-            side = avslutteEllerTilbake_2(B)
-            if (side == 'hoved'):
-                bruker = B
+            B, handling = giInnTall('Breddegrad')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(B)):
-                B = input("Ikke gyldig tall! Breddegrad: ")
-                side = avslutteEllerTilbake_2(B)
-                if (side == 'hoved'):
-                    bruker = B
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
 
-            L = input("Lengdegrad: ")
-            side = avslutteEllerTilbake_2(L)
-            if (side == 'hoved'):
-                bruker = L
+            L, handling = giInnTall('Lengdegrad')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
-            while (not gyldigTall(L)):
-                L = input("Ikke gyldig tall! Lengdegrad: ")
-                side = avslutteEllerTilbake_2(L)
-                if (side == 'hoved'):
-                    bruker = L
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
+
+            h, handling = giInnTall('Høyde')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
             
-            h = input("Høyde: ")
-            side = avslutteEllerTilbake_2(h)
-            if (side == 'hoved'):
-                bruker = h
+            valg, handling = giInnJaNei()
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(h)):
-                h = input("Ikke gyldig tall! Høyde: ")
-                side = avslutteEllerTilbake_2(h)
-                if (side == 'hoved'):
-                    bruker = h
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
             
-            valg = input("Ønsker du et annet system enn EUREF89? (J/N) ")
-            side = avslutteEllerTilbake_2(valg)
-            if (side == 'hoved'):
-                bruker = valg
-                break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
             system = ""
-            while (valg not in jaNei):
-                valg = input("J/N: ")
-                side = avslutteEllerTilbake_2(valg)
-                if (side == 'hoved'):
-                    bruker = valg
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
             
             if (valg == "J"):
-                print("Velg mellom følgende system: 'WGS84', 'ED50'/'ED87' eller 'NGO1948'.")
-                system = input("System: ")
-                side = avslutteEllerTilbake_2(system)
-                if (side == 'hoved'):
-                    bruker = system
+                system, handling = giInnSystem()
+                if (handling == 'avslutt'):
+                    side, bruker = "hoved", "avslutt"
                     break
-                elif (side == "tilbake"):
+                elif (handling == 'tilbake'):
                     side = "Koordinatkonverterer"
                     break
-                while (system not in systemvalg):
-                    system = input("Ugyldig system! System: ")
-                    side = avslutteEllerTilbake_2(system)
-                    if (side == 'hoved'):
-                        bruker = system
-                        break
-                    elif (side == "tilbake"):
-                        side = "Koordinatkonverterer_exit"
-                        break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
 
             if (system == ""):
                 resultat = koorkon.LatLonToCartesian(float(B), float(L), float(h))
@@ -633,123 +400,48 @@ Skriv inn verdiene du vil konvertere:
 Du skal nå konvertere UTM-koordinater (N, E) til bredde- og lengdegrad.
 Skriv inn verdiene du vil konvertere:
 """)
-            N = input("Nord-verdi: ")
-            side = avslutteEllerTilbake_2(N)
-            if (side == 'hoved'):
-                bruker = N
+            N, handling = giInnTall('Nord-verdi')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(N)):
-                N = input("Ikke gyldig tall! Nord-verdi: ")
-                side = avslutteEllerTilbake_2(N)
-                if (side == 'hoved'):
-                    bruker = N
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
 
-            E = input("Øst-verdi: ")
-            side = avslutteEllerTilbake_2(E)
-            if (side == 'hoved'):
-                bruker = E
+            E, handling = giInnTall('Øst-verdi')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
-            while (not gyldigTall(E)):
-                E = input("Ikke gyldig tall! Øst-verdi: ")
-                side = avslutteEllerTilbake_2(E)
-                if (side == 'hoved'):
-                    bruker = E
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
+
+            sone, handling = giInnTall('Sone')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
             
-            sone = input("Hvilken sone er du i: ")
-            side = avslutteEllerTilbake_2(sone)
-            if (side == 'hoved'):
-                bruker = sone
+            valg, handling = giInnJaNei()
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(sone)):
-                sone = input("Ikke gyldig tall! Sone: ")
-                side = avslutteEllerTilbake_2(sone)
-                if (side == 'hoved'):
-                    bruker = sone
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
             
-            valg = input("Ønsker du et annet system enn EUREF89? (J/N) ")
-            side = avslutteEllerTilbake_2(valg)
-            if (side == 'hoved'):
-                bruker = valg
-                break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
             system = ""
-            while (valg not in jaNei):
-                valg = input("J/N: ")
-                side = avslutteEllerTilbake_2(valg)
-                if (side == 'hoved'):
-                    bruker = valg
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
             
             if (valg == "J"):
-                print("Velg mellom følgende system: 'WGS84', 'ED50'/'ED87' eller 'NGO1948'.")
-                system = input("System: ")
-                side = avslutteEllerTilbake_2(system)
-                if (side == 'hoved'):
-                    bruker = system
+                system, handling = giInnSystem()
+                if (handling == 'avslutt'):
+                    side, bruker = "hoved", "avslutt"
                     break
-                elif (side == "tilbake"):
+                elif (handling == 'tilbake'):
                     side = "Koordinatkonverterer"
                     break
-                while (system not in systemvalg):
-                    system = input("Ugyldig system! System: ")
-                    side = avslutteEllerTilbake_2(system)
-                    if (side == 'hoved'):
-                        bruker = system
-                        break
-                    elif (side == "tilbake"):
-                        side = "Koordinatkonverterer_exit"
-                        break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
 
             if (system == ""):
                 resultat = koorkon.UTMToLatLon(float(N), float(E), sone+"N")
@@ -767,146 +459,56 @@ Skriv inn verdiene du vil konvertere:
 Du skal nå konvertere UTM-koordinater (N, E) til kartesiske koordinater.
 Skriv inn verdiene du vil konvertere:
 """)
-            N = input("Nord-verdi: ")
-            side = avslutteEllerTilbake_2(N)
-            if (side == 'hoved'):
-                bruker = N
+            N, handling = giInnTall('Nord-verdi')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(N)):
-                N = input("Ikke gyldig tall! Nord-verdi: ")
-                side = avslutteEllerTilbake_2(N)
-                if (side == 'hoved'):
-                    bruker = N
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
 
-            E = input("Øst-verdi: ")
-            side = avslutteEllerTilbake_2(E)
-            if (side == 'hoved'):
-                bruker = E
+            E, handling = giInnTall('Øst-verdi')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(E)):
-                E = input("Ikke gyldig tall! Øst-verdi: ")
-                side = avslutteEllerTilbake_2(E)
-                if (side == 'hoved'):
-                    bruker = E
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
-            
-            h = input("Høyde: ")
-            side = avslutteEllerTilbake_2(h)
-            if (side == 'hoved'):
-                bruker = h
-                break
-            elif (side == "tilbake"):
-                side = "Koordinatkonverterer"
-                break
-            while (not gyldigTall(h)):
-                h = input("Ikke gyldig tall! Høyde: ")
-                side = avslutteEllerTilbake_2(h)
-                if (side == 'hoved'):
-                    bruker = h
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
 
-            sone = input("Hvilken sone er du i: ")
-            side = avslutteEllerTilbake_2(sone)
-            if (side == 'hoved'):
-                bruker = sone
+            h, handling = giInnTall('Høyde')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
-            while (not gyldigTall(sone)):
-                sone = input("Ikke gyldig tall! Sone: ")
-                side = avslutteEllerTilbake_2(sone)
-                if (side == 'hoved'):
-                    bruker = sone
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
+
+            sone, handling = giInnTall('Sone')
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "Koordinatkonverterer_exit"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
             
-            valg = input("Ønsker du et annet system enn EUREF89? (J/N) ")
-            side = avslutteEllerTilbake_2(valg)
-            if (side == 'hoved'):
-                bruker = valg
+            valg, handling = giInnJaNei()
+            if (handling == 'avslutt'):
+                side, bruker = "hoved", "avslutt"
                 break
-            elif (side == "tilbake"):
+            elif (handling == 'tilbake'):
                 side = "Koordinatkonverterer"
                 break
+            
             system = ""
-            while (valg not in jaNei):
-                valg = input("J/N: ")
-                side = avslutteEllerTilbake_2(valg)
-                if (side == 'hoved'):
-                    bruker = valg
-                    break
-                elif (side == "tilbake"):
-                    side = "Koordinatkonverterer_exit"
-                    break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
             
             if (valg == "J"):
-                print("Velg mellom følgende system: 'WGS84', 'ED50'/'ED87' eller 'NGO1948'.")
-                system = input("System: ")
-                side = avslutteEllerTilbake_2(system)
-                if (side == 'hoved'):
-                    bruker = system
+                system, handling = giInnSystem()
+                if (handling == 'avslutt'):
+                    side, bruker = "hoved", "avslutt"
                     break
-                elif (side == "tilbake"):
+                elif (handling == 'tilbake'):
                     side = "Koordinatkonverterer"
                     break
-                while (system not in systemvalg):
-                    system = input("Ugyldig system! System: ")
-                    side = avslutteEllerTilbake_2(system)
-                    if (side == 'hoved'):
-                        bruker = system
-                        break
-                    elif (side == "tilbake"):
-                        side = "Koordinatkonverterer_exit"
-                        break
-            if (side == 'hoved'):
-                break
-            elif (side == "Koordinatkonverterer_exit"):
-                side = "Koordinatkonverterer"
-                break
 
             if (system == ""):
                 resultat = koorkon.UTMToCartesian(float(N), float(E), float(h), sone + "N")
@@ -919,10 +521,11 @@ Skriv inn verdiene du vil konvertere:
             print("### ####\n")
             input()
     
-    if (side == 'Koordinatkonverterer'):
-        bruker = "2"
+    if (bruker != 'avslutt' and bruker != 'tilbake'):
+        if (side == 'Koordinatkonverterer'):
+            bruker = "2"
 
-    elif (bruker != "avslutt"):
+    if (bruker != "avslutt" and bruker != '2'):
         print("""
 ### ### ### ### ### ### ### ### ### ### ### ###
 
@@ -932,8 +535,12 @@ Du er nå tilbake i hovedmenyen og har følgende valg:
 [2] Konvertere egne koordinater til andre system
 
 Skriv et tall i følgende intervall, 1 - 2, for å velge funksjonalitet basert på valgmulighetene over.
-        """)
+""")
+        
         bruker = input("Jeg vil utføre handling: ")
+        while (bruker not in valgHoved):
+            bruker = input("Ugyldig input! Utfører handling: ")
+
         print("\n### ### ### ### ### ### ### ### ### ### ### ###\n")
 
 print("\n### ### ### ### ### ### ### ### ### ### ### ###\n\nTakk for denne gang! 8)")
