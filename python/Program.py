@@ -42,38 +42,38 @@ def giInnTall(streng):
     side = avslutteEllerTilbake_2(value)
     
     if (side == 'hoved'):
-        return value, 'avslutt'
-    elif (side == "tilbake"):
-        return value, 'tilbake'
+        return value, "avslutt"
+    elif (side == 'tilbake'):
+        return value, "tilbake"
     
     while (not gyldigTall(value)):
         value = input("Ikke gyldig tall! " + streng + ": ")
         side = avslutteEllerTilbake_2(value)
         if (side == 'hoved'):
-            return value, 'avslutt'
-        elif (side == "tilbake"):
-            return value, 'tilbake'
+            return value, "avslutt"
+        elif (side == 'tilbake'):
+            return value, "tilbake"
     
-    return value, 'fortsett'
+    return value, "fortsett"
 
 def giInnJaNei():
     valg = input("Ønsker du et annet system enn EUREF89? (J/N) ")
     side = avslutteEllerTilbake_2(valg)
     
     if (side == 'hoved'):
-        return valg, 'avslutt'
-    elif (side == "tilbake"):
-        return valg, 'tilbake'
+        return valg, "avslutt"
+    elif (side == 'tilbake'):
+        return valg, "tilbake"
     
     while (valg not in jaNei):
         valg = input("J/N: ")
         side = avslutteEllerTilbake_2(valg)
         if (side == 'hoved'):
-            return valg, 'avslutt'
-        elif (side == "tilbake"):
-            return valg, 'tilbake'
+            return valg, "avslutt"
+        elif (side == 'tilbake'):
+            return valg, "tilbake"
     
-    return valg, 'fortsatt'
+    return valg, "fortsatt"
 
 def giInnSystem():
     print("Velg mellom følgende system: 'WGS84', 'ED50'/'ED87' eller 'NGO1948'.")
@@ -81,19 +81,19 @@ def giInnSystem():
     side = avslutteEllerTilbake_2(system)
     
     if (side == 'hoved'):
-        return system, 'avslutt'
-    elif (side == "tilbake"):
-        return system, 'tilbake'
+        return system, "avslutt"
+    elif (side == 'tilbake'):
+        return system, "tilbake"
     
     while (system not in systemvalg):
         system = input("Ugyldig system! System: ")
         side = avslutteEllerTilbake_2(system)
         if (side == 'hoved'):
-            return system, 'avslutt'
-        elif (side == "tilbake"):
-            return system, 'tilbake'
+            return system, "avslutt"
+        elif (side == 'tilbake'):
+            return system, "tilbake"
     
-    return system, 'fortsett'
+    return system, "fortsett"
 
 # Program:
 
@@ -107,7 +107,7 @@ Hei og velkommen til koordinatkonvertereren!
 Du er nå på hovedsiden der du har følgende valg:
 
 [1] Se svarene for 'Øving 1'
-[2] Konvertere egne koordinater til andre system
+[2] Konvertere egne koordinater til andre typer av koordinater
 
 Du kan når som helst skrive 'avslutt' for å avslutte programmet, eller 'tilbake' for å komme tilbake til forrige meny.
 
@@ -137,10 +137,6 @@ while (bruker != 'avslutt'):
     if (bruker == '2'):
         side = "Koordinatkonverterer"
     
-    ###################################
-    # TODO: Les over og se om alt er riktig stavet, ønskede ord og syntaks 8)
-    ###################################
-
     while (side == 'Koordinatkonverterer'):
         print("""\nHer kan du konvertere mellom ulike typer koordinater i gitte system.
 
