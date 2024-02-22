@@ -34,47 +34,36 @@
 
         <!-- Hovedinnhold -->
 
-        <div class="box">
+        <div class="mainBox">
             <div class="transformbox1">
-                <div class="transformbox2">
-                    <h4>Konvertere fra Kartesiske koordinater til bredde- og lengdegrader og UTM-koordinater</h4>
-                    <input  type="text" id="X" class="input">
-                    <br>
-                    <input  type="text" id="Y" class="input">
-                    <br>
-                    <input  type="text" id="Z" class="input">
-                    <br>
-                    <button onclick="Cartesian()" class="transformButton">Transformer</button>
+                <div class="transformbox2" style="display: flex; flex-direction: column; flex-grow: 5;">
+                    <h2>Konverter koordinater:</h2>
+                    <p>Hvilket system er du i?</p>
+                    <div>
+                        <button class="transformButtonChosen" id="EUREF89" onclick="endreSystem('EUREF89')">EUREF89</button>
+                        <button class="transformButton" id="WGS84" onclick="endreSystem('WGS84')">WGS84</button>
+                        <button class="transformButton" id="ED50" onclick="endreSystem('ED50')">ED50/ED87</button>
+                        <button class="transformButton" id="NGO1948" onclick="endreSystem('NGO1948')">NGO1948</button>
+                    </div>
+                    <p>Hva slags koordinater konverterer du fra?</p>
+                    <div>
+                        <button class="transformButtonChosen" id="kartesisk" onclick="endreType('kartesisk')">Kartesiske koordinater</button>
+                        <button class="transformButton" id="brelen" onclick="endreType('brelen')">Bredde- og lengdegrad</button>
+                        <button class="transformButton" id="UTM" onclick="endreType('UTM')">UTM-koordinater</button>
+                    </div>
                 </div>
-
-                <div class="transformbox2">
-                    <h4>Konvertere fra bredde- og lengdegrader til kartesiske koordinater og UTM-koordinater</h4>
-                    <input  type="text" id="B" class="input">
-                    <br>
-                    <input  type="text" id="L" class="input">
-                    <br>
-                    <input  type="text" id="h" class="input">
-                    <br>
-                    <button onclick="LatLong()" class="transformButton">Transformer</button>
+                <div  class="transformbox2">
+                    <input class="input" type="number" step="0.00001" id="in1" placeholder="X-verdi"><br>
+                    <input class="input" type="number" step="0.00001" id="in2" placeholder="Y-verdi"><br>
+                    <input class="input" type="number" step="0.00001" id="in3" placeholder="Z-verdi"><br>
+                    <input class="input" type="number" step="0.00001" id="in4" placeholder="UTM-sone" style="display: none;"><br>
+                    <button class="transformButton" style="width: 14vw;" onclick="konverter()">Transformer</button>
                 </div>
-
                 <div class="transformbox2">
-                    <h4>Konvertere fra UTM-koordinater til kartesiske koordinater og bredde- og lengdegrader</h4>
-                    <input  type="text" id="N" class="input">
-                    <br>
-                    <input  type="text" id="E" class="input">
-                    <br>
-                    <input  type="text" id="H" class="input">
-                    <br>
-                    <input type="text" id="sone" class="input">
-                    <br>
-                    <button onclick="UTM()" class="transformButton">Transformer</button>
-                    <br>
-                    <p id="Resultat"></p>
+                    <p id="resultat" style="display: inline-block;"></p>
                 </div>
             </div>
-            <div id="map" style="position: relative; z-index: 1; height: 75vh; width: 65vw;">
-            </div>
+            <div id="map" style="position: relative; z-index: 1; height: 75vh; width: 65vw;"></div>
         </div>
 
         <!-- JS -->
@@ -83,6 +72,8 @@
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
         <!-- Min js-->
+        <script src="javascript/HenteSfaeriskeVerdier.js"></script>
+        <script src="javascript/InnstillingKonvertering.js"></script>
         <script src="javascript/KoordinatKonvertering.js"></script>
         <script src="javascript/map.js"></script>
 

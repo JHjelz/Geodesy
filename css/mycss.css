@@ -26,7 +26,7 @@ Justerer utseende til programmet
     text-align: center;
 }
 
-.box {
+.mainBox {
     margin: 2vh;
     display: flex;
     flex-direction: row;
@@ -34,13 +34,12 @@ Justerer utseende til programmet
 }
 
 .transformbox1 {
-    display: flex;
+    text-align: center;
     flex-direction: column;
     flex-grow: 3;
 }
 
 .transformbox2 {
-    text-align: center;
     padding-top: 1vh;
     padding-bottom: 1vh;
 }
@@ -52,7 +51,9 @@ Justerer utseende til programmet
 }
 
 .transformButton {
+    text-align: center;
     border-radius: 5px;
+    border: none;
     background-color: green;
     color: white;
     cursor: pointer;
@@ -60,4 +61,33 @@ Justerer utseende til programmet
     font-weight: bold;
     height: 4vh;
     margin: 0.25vh;
+}
+
+.transformButtonChosen {
+    text-align: center;
+    border-radius: 5px;
+    border: none;
+    background-color: orangered;
+    color: white;
+    cursor: pointer;
+    font-family: monospace;
+    font-weight: bold;
+    height: 4vh;
+    margin: 0.25vh;
+}
+
+.transformButton:hover {
+    background-color: orange;
+}
+
+.transformButtonChosen:hover {
+    background-color: orange;
+}
+
+#resultat{
+    width: 25vw;
+    height: 20vh;
+    border-radius: 5px;
+    border-color: green;
+    align-items: center;
 }
