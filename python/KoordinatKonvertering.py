@@ -105,7 +105,6 @@ def LatLonToUTM(br, le, system="EUREF89"):
     e2 = e**2 / (1 - e**2)
     n = (a - b) / (a + b)
     nu = a / np.sqrt(1 - e**2 * (np.sin(br))**2)
-    print(nu)
     p = le - l0
 
     S = A(a, n) * br - B(a, n) * np.sin(2 * br) + C(a, n) * np.sin(4 * br) - D(a, n) * np.sin(6 * br) + E(a, n) * np.sin(8 * br)
@@ -204,6 +203,3 @@ def UTMToLatLon(x, y, sone, system="EUREF89"):
 def UTMToCartesian(x, y, h, sone, system="EUREF89"):
     A1 = UTMToLatLon(x, y, sone, system)
     return LatLonToCartesian(A1[0], A1[1], h, system)
-
-
-print(CartesianToUTM(2815415.137, 518305.734, 5680680.336))
