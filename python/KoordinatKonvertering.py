@@ -104,8 +104,8 @@ def LatLonToUTM(br, le, system="EUREF89"):
     k0 = 0.9996
     e2 = e**2 / (1 - e**2)
     n = (a - b) / (a + b)
-    #rho = a * (1 - e**2) / (1 - e**2 * (np.sin(br))**2)**(3 / 2)
     nu = a / np.sqrt(1 - e**2 * (np.sin(br))**2)
+    print(nu)
     p = le - l0
 
     S = A(a, n) * br - B(a, n) * np.sin(2 * br) + C(a, n) * np.sin(4 * br) - D(a, n) * np.sin(6 * br) + E(a, n) * np.sin(8 * br)
@@ -164,7 +164,7 @@ def UTMToLatLon(x, y, sone, system="EUREF89"):
     # Konverteringskonstanter:
     k0 = 0.9996
     m = x / k0
-    mu  = m / (a * (1 - e**2 / 4 - 3 * e**4 / 64 - 5 * e**6 /256))
+    mu  = m / (a * (1 - e**2 / 4 - 3 * e**4 / 64 - 5 * e**6 / 256))
     e1 = (1 - np.sqrt(1 - e**2)) / (1 + np.sqrt(1 - e**2))
 
     # 'Fotavtrykket' til breddegraden
@@ -204,3 +204,6 @@ def UTMToLatLon(x, y, sone, system="EUREF89"):
 def UTMToCartesian(x, y, h, sone, system="EUREF89"):
     A1 = UTMToLatLon(x, y, sone, system)
     return LatLonToCartesian(A1[0], A1[1], h, system)
+
+
+print(CartesianToUTM(2815415.137, 518305.734, 5680680.336))
