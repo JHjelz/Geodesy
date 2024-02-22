@@ -48,9 +48,14 @@ def negativListe(l1):
     return ans
 
 def gradTilrad(v):
-    return v * 2 * np.pi / 360
+    return v * np.pi / 180
 
-# 1a)
+def radTilgrad(v):
+    return v * 180 / np.pi
+
+### Oppgave 1 ###
+
+# a)
 
 def CTRS_til_LG(delta, phi, Lambda):
     """
@@ -70,7 +75,7 @@ def horizontalDistance(bl):
     """
     return np.sqrt(bl[0]**2 + bl[1]**2)
 
-# 1 b)
+# b)
 
 def azimuth(bl):
     """
@@ -80,10 +85,10 @@ def azimuth(bl):
         if bl[1] > 0:
             return np.arctan(bl[1] / bl[0])
         else:
-            return -np.arctan(bl[1] / bl[0]) + 2 * np.pi
+            return np.arctan(bl[1] / bl[0]) + 2 * np.pi
     else:
         if bl[1] > 0:
-            return -np.arctan(bl[1] / bl[0]) + np.pi
+            return np.arctan(bl[1] / bl[0]) + np.pi
         else:
             return np.arctan(bl[1] / bl[0]) + np.pi
 
@@ -113,24 +118,88 @@ def r(B, azi):
     return (rN(B) * rM(B)) / (rN(B) * (np.cos(azi))**2 + rM(B) * (np.sin(azi))**2)
 
 def zenithAngle(bl):
+    """
+    Beregner zenit-vinkel for en gitt baseline
+    """
     angle = np.arctan(horizontalDistance(bl) / bl[2])
     if angle < 0:
         return angle + np.pi
     return angle
 
 def horizontalDistance_2(bl):
+    """
+    Beregner distanse i 2D-planet
+    """
     return slopeDistance(bl) * np.sin(zenithAngle(bl))
 
 def earthAngle(bl, R, h):
+    """
+    Beregner vinkelen gamma ved jordsentrum mellom to punkt i gitt baseline
+    """
     return np.arctan(horizontalDistance_2(bl) / (R + h + bl[2]))
 
 def correctedHorizontalDistance(bl, B, h, east):
+    """
+    Beregner korrigert distanse i kartprojeksjonsplanet
+    """
     R = r(B, azimuth(bl[:2]))
     angle = earthAngle(bl, R, h)
     s0 = R * angle
     for i in range(len(east)):
         east[i] = (east[i] - 500000) / 0.9996
     return s0 + s0 / (6 * R**2) * (east[0]**2 + east[0] * east[1] + east[1]**2) - 0.0004 * s0
+
+# c)
+
+def correctedAzimuth(bl, B, L, FraUTM, TilUTM):
+    """
+    Beregner korrigert azimuth i kartprojeksjonsplanet
+    """
+    korC = correctionC(B, L)
+    korDelta = correctionDelta(bl, B, FraUTM, TilUTM)
+    return (azimuth(bl) * 200 / np.pi - np.abs(korC) - np.abs(korDelta[0])) * 180 / 200
+
+def correctionC(B, L):
+    """
+    Beregner korreksjonsleddet C for korrigeringen av azimuth
+    """
+    B = gradTilrad(B)
+    l = gradTilrad(L - ((L // 6) * 6 + 3))
+
+    NU = nu(B)
+
+    f1 = l * np.sin(B)
+    f2 = (l**3 / 3) * np.sin(B) * (np.cos(B))**2 * (1 + 3 * NU**2 + 2 * NU**4)
+    f3 = (l**5 / 15) * np.sin(B) * (np.cos(B))**4 * (2 - (np.tan(B))**2)
+    
+    return radTilgrad(f1 + f2 + f3)
+
+def correctionDelta(bl, B, p1, p2):
+    """
+    Beregner korreksjonsleddet delta for korrigeringen av azimuth
+    """
+    R = r(B, azimuth(bl))
+    AB = radTilgrad(1 / (6 * R**2) * (2 * p1[1] + p2[1]) * (p2[0] - p1[0]))
+    BA = radTilgrad(1 / (6 * R**2) * (2 * p2[1] + p1[1]) * (p1[0] - p2[0]))
+    return AB, BA
+
+def nu(B):
+    """
+    Hjelpeledd for korreksjonen i C
+    """
+    return np.sqrt(e**4 * (np.cos(B))**2 / (1 - e**4))
+
+# d)
+
+def correctedHeightDifference(bl, B, NStart, NSlutt):
+    return bl[2] + correctedEarthCurv(bl, B) - (NSlutt - NStart)
+
+def correctedEarthCurv(bl, B):
+    return (slopeDistance(bl) * np.sin(zenithAngle(bl)))**2 / (2 * r(B, azimuth(bl)))
+
+# e)
+
+# ...
 
 # Data:
 
@@ -197,7 +266,6 @@ def O1a():
     # Konverterer til lokalt system:
 
     tp342LG = CTRS_til_LG(dtp342, bl_moholt[0], bl_moholt[1])
-    # Jeg velger Moholt som mitt senterpunkt under konverteringen til lokalt system, derfor snur jeg baselinen ST46 -> Moholt:
     moholtLG = CTRS_til_LG(dmoholt, bl_st46[0], bl_st46[1])
 
     print("\n### Oppgave 1 ###\n\na)\n")
@@ -213,14 +281,14 @@ def O1a():
     len3, len4 = slopeDistance(tp342LG), slopeDistance(moholtLG)
 
     print("\nKontrollsjekk:\n")
-    print("Differanse distanse #1: " + str(len1) + " = " + str(len3) + ", diff = " + str(np.abs(len1 - len3)))
-    print("Differanse distanse #2: " + str(len2) + " = " + str(len4) + ", diff = " + str(np.abs(len2 - len4)))
+    print("Differanse Moholt -> TP342:\t" + str(len1) + " m = " + str(len3) + " m,\tdiff = " + str(np.abs(len1 - len3)) + " m")
+    print("Differanse ST46 -> Moholt:\t" + str(len2) + " m = " + str(len4) + " m,\tdiff = " + str(np.abs(len2 - len4)) + " m")
 
 # b)
 
 def O1b():
     tp342LG = CTRS_til_LG(dtp342, bl_moholt[0], bl_moholt[1])
-    moholtLG = CTRS_til_LG(dmoholt, bl_moholt[0], bl_moholt[1])
+    moholtLG = CTRS_til_LG(dmoholt, bl_st46[0], bl_st46[1])
 
     # Beregner korrigerte distanser:
 
@@ -228,8 +296,8 @@ def O1b():
     corrDistMoholt =  correctedHorizontalDistance(moholtLG, bl_st46[0], bl_st46[2], [UTM_st46[1], UTM_moholt[1]])
 
     print("\n### Oppgave 1 ###\n\nb)\n")
-    print("Korrigert distanse fra Moholt til TP342:\t" + str(corrDistTP342))
-    print("Korrigert distanse fra ST46 til Moholt:\t\t" + str(corrDistMoholt))
+    print("Korrigert distanse fra Moholt til TP342:\t" + str(corrDistTP342) + " m")
+    print("Korrigert distanse fra ST46 til Moholt:\t\t" + str(corrDistMoholt) + " m")
 
     """
     Utfører kontroll ved å sammenligne de korrigerte distansene over med vanlig horisontal
@@ -239,9 +307,68 @@ def O1b():
     control1, control2 = horizontalDistance(deltaListe(EUREF_moholt, EUREF_tp342)), horizontalDistance(deltaListe(EUREF_st46, EUREF_moholt))
 
     print("\nKontrollsjekk:\n")
-    print("Differanse Moholt -> TP342:\t" + str(corrDistTP342) + " = " + str(control1) + ", diff = " + str(np.abs(control1 - corrDistTP342)))
-    print("Differanse ST46 -> Moholt:\t" + str(corrDistMoholt) + " = " + str(control2) + ", diff = " + str(np.abs(control2 - corrDistMoholt)))
+    print("Differanse Moholt -> TP342:\t" + str(corrDistTP342) + " m = " + str(control1) + " m,\tdiff = " + str(np.abs(control1 - corrDistTP342)) + " m")
+    print("Differanse ST46 -> Moholt:\t" + str(corrDistMoholt) + " m = " + str(control2) + " m,\tdiff = " + str(np.abs(control2 - corrDistMoholt)) + " m")
 
 # c)
+
+def O1c():
+    tp342LG = CTRS_til_LG(dtp342, bl_moholt[0], bl_moholt[1])
+    moholtLG = CTRS_til_LG(dmoholt, bl_st46[0], bl_st46[1])
+
+    # Beregner azimuth:
+
+    aziTP = radTilgrad(azimuth(tp342LG))
+    aziMoh = radTilgrad(azimuth(moholtLG))
+
+    # Beregner korrigerte azimuth:
+
+    corraziTP = correctedAzimuth(tp342LG, bl_moholt[0], bl_moholt[1], UTM_moholt[:2], UTM_tp342[:2])
+    corraziMoh = correctedAzimuth(moholtLG, bl_st46[0], bl_st46[1], UTM_st46[:2], UTM_moholt[:2])
+
+    print("\n### Oppgave 1 ###\n\nc)\n")
+    print("Azimuth fra Moholt til TP342 uten korrigeringer:\t" + str(aziTP) + " grader")
+    print("Azimuth fra ST46 til Moholt uten korrigeringer:\t\t" + str(aziMoh) + " grader\n")
+    print("Korrigert azimuth fra Moholt til TP342:\t\t\t" + str(corraziTP) + " grader")
+    print("Korrigert azimuth fra ST46 til Moholt:\t\t\t" + str(corraziMoh) + " grader")
+
+    """
+    Utfører kontroll ved å sammenligne de korrigerte azimuthene over med vanlig 
+    azimuth målt ved å bruke UTM-kordinatene gitt i 'Tabell 1' i oppgaveteksten
+    """
+
+    control1, control2 = radTilgrad(azimuth(deltaListe(EUREF_moholt, EUREF_tp342))), radTilgrad(azimuth(deltaListe(EUREF_st46, EUREF_moholt)))
+
+    print("\nKontrollsjekk:\n")
+    print("Differanse Moholt -> TP342:\t" + str(corraziTP) + " grader = " + str(control1) + " grader,\tdiff = " + str(np.abs(control1 - corraziTP)) + " grader")
+    print("Differanse ST46 -> Moholt:\t" + str(corraziMoh) + " grader = " + str(control2) + " grader,\tdiff = " + str(np.abs(control2 - corraziMoh)) + " grader")
+
+# d)
+
+def O1d():
+    tp342LG = CTRS_til_LG(dtp342, bl_moholt[0], bl_moholt[1])
+    moholtLG = CTRS_til_LG(dmoholt, bl_st46[0], bl_st46[1])
+
+    # Beregner korrigert høydeforskjell:
+
+    corrDeltaHeightTP = correctedHeightDifference(tp342LG, bl_moholt[0], EUREF_moholt[3]-EUREF_moholt[2], EUREF_tp342[3]-EUREF_tp342[2])
+    corrDeltaHeightMoh = correctedHeightDifference(moholtLG, bl_st46[0], EUREF_st46[3]-EUREF_st46[2], EUREF_moholt[3]-EUREF_moholt[2])
+
+    print("\n### Oppgave 1 ###\n\nd)\n")
+    print("Korrigert NN2000 høydeforskjell fra Moholt til TP342:\t" + str(corrDeltaHeightTP) + " m")
+    print("Korrigert NN2000 høydeforskjell fra ST46 til Moholt:\t" + str(corrDeltaHeightMoh) + " m")
+
+    """
+    Utfører kontroll ved å sammenligne de korrigerte høydeforskjellene over med
+    høydeforskjellen beregnet ved å bruke NN2000-høydene gitt i 'Tabell 1' i oppgaveteksten
+    """
+    
+    control1, control2 = EUREF_tp342[2] - EUREF_moholt[2], EUREF_moholt[2] - EUREF_st46[2]
+
+    print("\nKontrollsjekk:\n")
+    print("Differanse Moholt -> TP342:\t" + str(corrDeltaHeightTP) + " m = " + str(control1) + " m,\t\tdiff = " + str(np.abs(control1 - corrDeltaHeightTP)) + " m")
+    print("Differanse ST46 -> Moholt:\t" + str(corrDeltaHeightMoh) + " m = " + str(control2) + " m,\tdiff = " + str(np.abs(control2 - corrDeltaHeightMoh)) + " m")
+
+# e)
 
 # ...
