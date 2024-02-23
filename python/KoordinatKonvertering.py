@@ -98,7 +98,7 @@ def LatLonToUTM(br, le, system="EUREF89"):
 
     # Gjør om til rad:
     br, le = gradTilrad(br), gradTilrad(le)
-
+    
     # Konverterings-konstanter:
     l0 = gradTilrad((radTilgrad(le) // 6) * 6 + 3)
     k0 = 0.9996
