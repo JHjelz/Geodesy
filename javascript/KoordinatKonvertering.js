@@ -23,15 +23,36 @@ function Cartesian(val) {
     var latlon = cartesianToLatLong(x, y, z, val[0], val[2]);
     var UTM = cartesianToUTM(x, y, z, val[0], val[1], val[2]);
 
-    document.getElementById("resultat").innerHTML = `Bredde- og lengdegrader:<br>[${latlon[0]}, ${latlon[1]}, ${latlon[2]}]<br>UTM-koordinater:<br>[${UTM[0]}, ${UTM[1]}, ${UTM[2]}]`;
+    plasserPunkt(latlon[0], latlon[1]);
+
+    document.getElementById("resultat").innerHTML = `<b>Bredde- og lengdegrader:</b><br>[${latlon[0]}, ${latlon[1]}, ${latlon[2]}]<br><b>UTM-koordinater:</b><br>[${UTM[0]}, ${UTM[1]}, ${UTM[2]}]`;
 }
 
 function LatLong(val) {
+    var B = parseFloat(document.getElementById("in1").value);
+    var L = parseFloat(document.getElementById("in2").value);
+    var h = parseFloat(document.getElementById("in3").value);
 
+    var kartesisk = latlonToCartesian(B, L, h, val[0], val[1]);
+    var UTM = latLonToUTM(B, L, val[0], val[1], val[2]);
+
+    plasserPunkt(B, L);
+
+    document.getElementById("resultat").innerHTML = `<b>Kartesiske koordinater:</b><br>[${kartesisk[0]}, ${kartesisk[1]}, ${kartesisk[2]}]<br><b>UTM-koordinater:</b><br>[${UTM[0]}, ${UTM[1]}, ${h}]`;
 }
 
 function UTM(val) {
+    var N = parseFloat(document.getElementById("in1").value);
+    var E = parseFloat(document.getElementById("in2").value);
+    var h = parseFloat(document.getElementById("in3").value);
+    var sone = parseFloat(document.getElementById("in4").value);
 
+    var kartesisk = UTMToCartesian(N, E, h, sone, val[0], val[1], val[2]);
+    var latlon = UTMToLatLon(N, E, sone, val[0], val[2]);
+
+    plasserPunkt(latlon[0], latlon[1]);
+
+    document.getElementById("resultat").innerHTML = `<b>Kartesiske koordinater:</b><br>[${kartesisk[0]}, ${kartesisk[1]}, ${kartesisk[2]}]<br><b>UTM-koordinater:</b><br>[${latlon[0]}, ${latlon[1]}, ${h}]`;
 }
 
 // Hjelpefunksjoner:
@@ -85,13 +106,14 @@ function cartesianToLatLong(x, y, z, a, e) {
 
 function latLonToUTM(br, le, a, b, e) {
     var l0 = gradTilrad((Math.floor(le / 6) * 6) + 3);
-
-    br, le = gradTilrad(br), gradTilrad(le);
+    
+    br = gradTilrad(br);
+    le = gradTilrad(le);
     
     var k0 = 0.9996;
     var e2 = e**2 / (1 - e**2);
     var n = (a - b) / (a + b);
-    var nu = a / Math.sqrt(1 - e**2 * Math.sin(br)**2);
+    var nu = a / Math.sqrt(1 - e**2 * (Math.sin(br))**2);
     var p = le - l0;
 
     var S = A(a, n) * br - B(a, n) * Math.sin(2 * br) + C(a, n) * Math.sin(4 * br) - D(a, n) * Math.sin(6 * br) + E(a, n) * Math.sin(8 * br);
@@ -115,7 +137,8 @@ function cartesianToUTM(x, y, z, a, b, e) {
 }
 
 function latlonToCartesian(br, le, h, a, b) {
-    br, le = gradTilrad(br), gradTilrad(le);
+    br = gradTilrad(br);
+    le = gradTilrad(le);
 
     var n = a**2 / Math.sqrt(a**2 * (Math.cos(br))**2 + b**2 * (Math.sin(br))**2);
 

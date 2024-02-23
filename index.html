@@ -56,11 +56,12 @@
                     <input class="input" type="number" step="0.00001" id="in1" placeholder="X-verdi"><br>
                     <input class="input" type="number" step="0.00001" id="in2" placeholder="Y-verdi"><br>
                     <input class="input" type="number" step="0.00001" id="in3" placeholder="Z-verdi"><br>
-                    <input class="input" type="number" step="0.00001" id="in4" placeholder="UTM-sone" style="display: none;"><br>
+                    <input class="input" type="number" step="0.00001" id="in4" placeholder="UTM-sone (32 / 33)" style="display: none;"><br>
                     <button class="transformButton" style="width: 14vw;" onclick="konverter()">Transformer</button>
                 </div>
                 <div class="transformbox2">
-                    <p id="resultat" style="display: inline-block;"></p>
+                    <p id="resultat" style="display: inline-block;"></p><br>
+                    <button class="transformButton" onclick="reset()">Reset</button>
                 </div>
             </div>
             <div id="map" style="position: relative; z-index: 1; height: 75vh; width: 65vw;"></div>
@@ -76,6 +77,8 @@
         <script src="javascript/InnstillingKonvertering.js"></script>
         <script src="javascript/KoordinatKonvertering.js"></script>
         <script src="javascript/map.js"></script>
+        <script src="javascript/PunktIKart.js"></script>
+        <script src="javascript/Reset.js"></script>
 
     </body>
 </html>
