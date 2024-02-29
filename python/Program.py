@@ -163,7 +163,7 @@ Skriv inn ønsket handling som en bokstav i input-feltet.
 
         side = avslutteEllerTilbake(bruker)
         
-        if (bruker == '1'):
+        if (bruker == 'a'):
             print("""
 Du skal nå konvertere kartesiske koordinater (x,y,z) til lengde- og breddegrad.
 Skriv inn verdiene du vil konvertere:
@@ -222,7 +222,7 @@ Skriv inn verdiene du vil konvertere:
             print("### ####\n")
             input()
 
-        elif (bruker == '2'):
+        elif (bruker == 'b'):
             print("""
 Du skal nå konvertere kartesiske koordinater (x,y,z) til UTM-koordinater.
 Skriv inn verdiene du vil konvertere:
@@ -281,7 +281,7 @@ Skriv inn verdiene du vil konvertere:
             print("### ####\n")
             input()
 
-        elif (bruker == '3'):
+        elif (bruker == 'c'):
             print("""
 Du skal nå konvertere bredde- og lengdegrader (B, L, h) til UTM-koordinater.
 Skriv inn verdiene du vil konvertere:
@@ -332,7 +332,7 @@ Skriv inn verdiene du vil konvertere:
             print("### ####\n")
             input()
 
-        elif (bruker == '4'):
+        elif (bruker == 'd'):
             print("""
 Du skal nå konvertere bredde- og lengdegrader (B, L, h) til kartesiske koordinater.
 Skriv inn verdiene du vil konvertere:
@@ -391,7 +391,7 @@ Skriv inn verdiene du vil konvertere:
             print("### ####\n")
             input()
 
-        elif (bruker == '5'):
+        elif (bruker == 'e'):
             print("""
 Du skal nå konvertere UTM-koordinater (N, E) til bredde- og lengdegrad.
 Skriv inn verdiene du vil konvertere:
@@ -450,7 +450,7 @@ Skriv inn verdiene du vil konvertere:
             print("### ####\n")
             input()
 
-        elif (bruker == '6'):
+        elif (bruker == 'f'):
             print("""
 Du skal nå konvertere UTM-koordinater (N, E) til kartesiske koordinater.
 Skriv inn verdiene du vil konvertere:
