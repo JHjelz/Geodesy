@@ -8,9 +8,10 @@ Fra GNSS baseline observasjoner til observasjoner i UTM kartprojeksjon og høyde
 
 # Importerer biblioteker:
 
+import numpy  as np
+
 import Hjelpefunksjoner as h
 import KoordinatKonvertering as koorkon
-import numpy  as np
 
 # Funksjoner:
 
@@ -201,6 +202,28 @@ def correctedEarthCurv(bl, B):
 
 # ...
 
+### Oppgave 2 ###
+
+# a)
+
+# ...
+
+# b)
+
+# Distanse:
+
+"""
+Putt formlene inn i Geogebra og partiellderiver der - lag så tilsvarende formler her 8)
+"""
+
+# Azimuth:
+
+# Høyde:
+
+def partialDerivatives():
+    ans = np.zeros(3 * 3).reshape(3, 3)
+    return ans
+
 # Data:
 
 """
@@ -209,22 +232,22 @@ Fasit:
 EUREF89: sted = [N (UTM), E (UTM), H (NN2000), h (ellipsoide)]
 """
 
-EUREF_moholt = [7031952.892, 571469.041, 131.404, 170.839] # Data fra oppgavetekst
-EUREF_st46 = [7034487.402, 571578.304, 112.554, 151.851]
-EUREF_tp342 = [7033941.628, 568890.318, 5.194, 44.618]
-EUREF_havstein = [7031656.237, 568780.646, 131.495, 171.046]
+EUREF_moholt    = [7031952.892, 571469.041, 131.404, 170.839] # Data fra oppgavetekst
+EUREF_st46      = [7034487.402, 571578.304, 112.554, 151.851]
+EUREF_tp342     = [7033941.628, 568890.318,   5.194,  44.618]
+EUREF_havstein  = [7031656.237, 568780.646, 131.495, 171.046]
 
 # Jeg velger baseline 3 og 4: Moholt -> TP342 og ST46 -> Moholt
 
 # sted = [X, Y, Z]
 
-moholt = [2815415.137, 518305.734, 5680680.336] # Data fra vedlegg
-st46 = [2813149.450, 518057.327, 5681796.430]
+moholt  = [2815415.137, 518305.734, 5680680.336] # Data fra vedlegg
+st46    = [2813149.450, 518057.327, 5681796.430]
 
 # baseline = [dX, dY, dZ]
 
-dtp342 = [-1396.884, -2834.288, 802.443] # Moholt -> TP342 # Data fra vedlegg
-dmoholt = [2265.690, 248.405, -1116.088] # ST46 -> Moholt
+dtp342  = [-1396.884, -2834.288,   802.443] # Moholt -> TP342 # Data fra vedlegg
+dmoholt = [ 2265.690,   248.405, -1116.088] # ST46 -> Moholt
 
 tp342 = sumListe(moholt, dtp342)
 
@@ -237,9 +260,9 @@ bl_tp342 = koorkon.CartesianToLatLon(tp342[0], tp342[1], tp342[2])
 """
 # Konvertert med skTrans:
 
-bl_moholt = [63.408951187, 10.431110376, 170.843]
-bl_st46 = [63.431668740, 10.434433578, 151.865]
-bl_tp342 = [63.427301973, 10.380349670, 44.613]
+bl_moholt   = [63.408951187, 10.431110376, 170.843]
+bl_st46     = [63.431668740, 10.434433578, 151.865]
+bl_tp342    = [63.427301973, 10.380349670,  44.613]
 bl_havstein = [63.406818270, 10.377168783, 171.020]
 """
 
@@ -253,7 +276,6 @@ UTM_tp342 = koorkon.LatLonToUTM(bl_tp342[0], bl_tp342[1])
 
 a = 6378137 # [m]
 b = 6356752.3141 # [m]
-#f = (a - b) / a # []
 e = np.sqrt((a**2 - b**2) / a**2)
 
 # Program:
@@ -287,6 +309,8 @@ def O1a():
 # b)
 
 def O1b():
+    #Konverterer til lokalt system:
+
     tp342LG = CTRS_til_LG(dtp342, bl_moholt[0], bl_moholt[1])
     moholtLG = CTRS_til_LG(dmoholt, bl_st46[0], bl_st46[1])
 
@@ -313,6 +337,8 @@ def O1b():
 # c)
 
 def O1c():
+    #Konverterer til lokalt system:
+    
     tp342LG = CTRS_til_LG(dtp342, bl_moholt[0], bl_moholt[1])
     moholtLG = CTRS_til_LG(dmoholt, bl_st46[0], bl_st46[1])
 
@@ -346,6 +372,8 @@ def O1c():
 # d)
 
 def O1d():
+    #Konverterer til lokalt system:
+    
     tp342LG = CTRS_til_LG(dtp342, bl_moholt[0], bl_moholt[1])
     moholtLG = CTRS_til_LG(dmoholt, bl_st46[0], bl_st46[1])
 
@@ -372,3 +400,78 @@ def O1d():
 # e)
 
 # ...
+
+### Oppgave 2 ###
+
+# Cofactor matrix for dX, dY, dZ:
+# Moholt -> TP342:
+RMS1 = 0.7645
+Q1 = np.array([[0.00000008, 0.00000001, 0.00000007],
+               [0.00000001, 0.00000006, 0.00000003],
+               [0.00000007, 0.00000003, 0.00000039]])
+
+# ST46 -> Moholt:
+RMS2 = 0.3428
+Q2 = np.array([[0.00000012, 0.00000003, 0.00000010],
+               [0.00000003, 0.00000008, 0.00000005],
+               [0.00000010, 0.00000005, 0.00000060]])
+
+# a)
+
+def O2a():
+    C1_CTRS = RMS1**2 * Q1
+    C2_CTRS = RMS2**2 * Q2
+
+    print("\n### Oppgave 2 ###\n\na)\n")
+    print("Varians-kovarians-matrise for baseline Moholt -> TP342:")
+    print(C1_CTRS)
+    print("\nVarians-kovarians-matrise for baseline ST46 -> Moholt:")
+    print(C2_CTRS)
+
+# b)
+
+"""
+I a) brukte en kofaktor-matrisen og RMS - root mean squared - fra baseline-rapporten til å finne varians-kovarians-matrisen i CTRS.
+
+Nå må en først konvertere til LG ved bruk av error propagation law: C_LG = A * C_CTRS * A^T
+Dette er fordi en bruker matematiske funksjoner og formler for å komme seg fra CTRS til LG: Y = Ax + B
+
+Når T er funnet og en har varians og kovarians i LG kan en finne de avledede målene.
+
+Observasjoner:
+[] Distanse i kartprojeksjon
+[] Azimuth i kartprojeksjon
+[] Høydeforskjell i NN2000
+
+Når uttrykkene for disse er funnet kan en partiellderivere med hensyn på x, y og z, sette de inn i en 3x3-matrise
+og regne ut varians-kovarians-matrisen for avledede mål i kartprojeksjonen: C_mål = F * C_LG * F^T
+"""
+
+def O2b():
+    C1_CTRS = RMS1**2 * Q1
+    C2_CTRS = RMS2**2 * Q2
+
+    B1, L1 = bl_moholt[0], bl_moholt[1]
+    B2, L2 = bl_st46[0], bl_st46[1]
+
+    A1 = np.array([[-np.sin(B1)*np.cos(L1), -np.sin(B1)*np.sin(L1), np.cos(B1)],
+                [-np.sin(L1), np.cos(L1), 0],
+                [np.cos(B1)*np.cos(L1), np.cos(B1)*np.sin(L1), np.sin(B1)]])
+
+    A2 = np.array([[-np.sin(B2)*np.cos(L2), -np.sin(B2)*np.sin(L2), np.cos(B2)],
+                [-np.sin(L2), np.cos(L2), 0],
+                [np.cos(B2)*np.cos(L2), np.cos(B2)*np.sin(L2), np.sin(B2)]])
+
+    C1_LG = h.matrixMultiplication(h.matrixMultiplication(A1, C1_CTRS), h.transposeMatrix(A1))
+    C2_LG = h.matrixMultiplication(h.matrixMultiplication(A2, C2_CTRS), h.transposeMatrix(A2))
+
+    """
+        [[dD/dx, dD/dy, dD/dz],  [[],
+    F =  [dB/dx, dB/dy, dB/dz], = [],
+         [dH/dx, dH/dy, dH/dz]]   []]
+    """
+
+    F1 =  partialDerivatives()
+    F2 =  partialDerivatives()
+
+O2b()
