@@ -496,5 +496,3 @@ def O2b():
     print("\nStandardavvik distanse i projeksjonsplanet: " +  str(np.sqrt(C2[0][0]) * 10**3) + " mm")
     print("Standardavvik azimuth i projeksjonsplanet: " +  str(np.sqrt(C2[1][1]) * 10**3) + " mgrader")
     print("Standardavvik høydedifferanse i NN2000: " +  str(np.sqrt(C2[2][2]) * 10**3) + " mm")
-
-O2b()
