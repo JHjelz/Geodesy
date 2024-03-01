@@ -193,9 +193,15 @@ def nu(B):
 # d)
 
 def correctedHeightDifference(bl, B, NStart, NSlutt):
+    """
+    Beregner korrigert høydedifferanse for en baseline
+    """
     return bl[2] + correctedEarthCurv(bl, B) - (NSlutt - NStart)
 
 def correctedEarthCurv(bl, B):
+    """
+    Beregner korreksjoner for høydeforskjell grunnet jordas krumning
+    """
     return (slopeDistance(bl) * np.sin(zenithAngle(bl)))**2 / (2 * r(B, azimuth(bl)))
 
 # e)
@@ -210,18 +216,20 @@ def correctedEarthCurv(bl, B):
 
 # b)
 
-# Distanse:
+def partialDerivatives(bl):
+    """
+    Beregner partiellderiverte verdier for gitt baseline
+    Returnerer transformasjonsmatrise som brukes for å finne standardavvik for utledede observasjoner
+    """
 
-"""
-Putt formlene inn i Geogebra og partiellderiver der - lag så tilsvarende formler her 8)
-"""
-
-# Azimuth:
-
-# Høyde:
-
-def partialDerivatives():
     ans = np.zeros(3 * 3).reshape(3, 3)
+
+    ans[0][0] = -bl[1] / (bl[0]**2 * ((bl[1]/bl[0])**2 + 1))
+    ans[0][1] = 1 / (bl[0] * ((bl[1]/bl[0])**2 + 1))
+    ans[1][0] = bl[0] / np.sqrt(bl[0]**2 + bl[1]**2)
+    ans[1][1] = bl[1] / np.sqrt(bl[0]**2 + bl[1]**2)
+    ans[2][2] = 1
+
     return ans
 
 # Data:
@@ -466,12 +474,27 @@ def O2b():
     C2_LG = h.matrixMultiplication(h.matrixMultiplication(A2, C2_CTRS), h.transposeMatrix(A2))
 
     """
-        [[dD/dx, dD/dy, dD/dz],  [[],
-    F =  [dB/dx, dB/dy, dB/dz], = [],
-         [dH/dx, dH/dy, dH/dz]]   []]
+        [[dD/dx, dD/dy, dD/dz],
+    F =  [dB/dx, dB/dy, dB/dz],
+         [dH/dx, dH/dy, dH/dz]]
     """
 
-    F1 =  partialDerivatives()
-    F2 =  partialDerivatives()
+    F1 =  partialDerivatives(dtp342)
+    F2 =  partialDerivatives(dmoholt)
+
+    C1 = h.matrixMultiplication(h.matrixMultiplication(F1, C1_LG), h.transposeMatrix(F1))
+    C2 = h.matrixMultiplication(h.matrixMultiplication(F2, C2_LG), h.transposeMatrix(F2))
+
+    print("\n### Oppgave 2 ###\n\nb)\n")
+    print("Varians-kovarians-matrise for utledede observasjoner Moholt -> TP342:")
+    print(C1)
+    print("\nStandardavvik distanse i projeksjonsplanet: " +  str(np.sqrt(C1[0][0]) * 10**3) + " mm")
+    print("Standardavvik azimuth i projeksjonsplanet: " +  str(np.sqrt(C1[1][1]) * 10**3) + " mgrader")
+    print("Standardavvik høydedifferanse i NN2000: " +  str(np.sqrt(C1[2][2]) * 10**3) + " mm")
+    print("\nVarians-kovarians-matrise for utledede observasjoner ST46 -> Moholt:")
+    print(C2)
+    print("\nStandardavvik distanse i projeksjonsplanet: " +  str(np.sqrt(C2[0][0]) * 10**3) + " mm")
+    print("Standardavvik azimuth i projeksjonsplanet: " +  str(np.sqrt(C2[1][1]) * 10**3) + " mgrader")
+    print("Standardavvik høydedifferanse i NN2000: " +  str(np.sqrt(C2[2][2]) * 10**3) + " mm")
 
 O2b()
