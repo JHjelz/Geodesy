@@ -496,3 +496,43 @@ def O2b():
     print("\nStandardavvik distanse i projeksjonsplanet: " +  str(np.sqrt(C2[0][0]) * 10**3) + " mm")
     print("Standardavvik azimuth i projeksjonsplanet: " +  str(np.sqrt(C2[1][1]) * 10**3) + " mgrader")
     print("Standardavvik høydedifferanse i NN2000: " +  str(np.sqrt(C2[2][2]) * 10**3) + " mm")
+
+### Oppgave 3 ###
+
+gisline = dict()
+
+"""
+
+dict[sted] =
+[[x_LG, y_LG, z_LG],        [m]
+ [sdx_LG, sdy_LG, sdz_LG],  [m]
+ [rxy, rxz, ryz],           [m]
+ [azi, vert, avst],         [gon, gon, m]
+ [sdazi, sdvert, sdavst],   [gon, m, m]
+ [rRdH, rRD, rDdH],         [gon / m]
+ [R, D, dH]]                [gon, m, m]
+
+"""
+
+gisline["mohtp"] = [[2046.5498, -2534.5363, -127.0737],
+                    [0.0022, 0.0019, 0.0049],
+                    [0.0138, 0.5263, 0.1381],
+                    [343.24407, 102.48206, 3260.12088],
+                    [0.00004, 0.00492, 0.00205],
+                    [0.5064, 0.1281, 0.2575],
+                    [341.82198, 3256.515, -126.233]]
+
+gisline["stmoh"] = [[-2532.3500, -166.0425, 18.4962],
+                    [0.0013, 0.0009, 0.0029],
+                    [-0.0367, 0.6394, 0.2007],
+                    [204.16826, 99.53602, 2537.85513],
+                    [0.00002, 0.00290, 0.00130],
+                    [-0.1416, -0.0795, -0.6493],
+                    [202.74283, 2536.864, 18.864]]
+
+"""O1a()
+O1b()
+O1c()
+O1d()
+O2a()
+O2b()"""
