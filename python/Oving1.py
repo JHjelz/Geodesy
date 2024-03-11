@@ -522,13 +522,13 @@ gisline = dict()
 """
 
 dict[sted] =
-[[x_LG, y_LG, z_LG],        [m]
- [sdx_LG, sdy_LG, sdz_LG],  [m]
- [rxy, rxz, ryz],           [m]
- [azi, vert, avst],         [gon, gon, m]
- [sdazi, sdvert, sdavst],   [gon, m, m]
- [rRdH, rRD, rDdH],         [gon / m]
- [R, D, dH]]                [gon, m, m]
+[[x_LG, y_LG, z_LG],        [m]             [0]
+ [sdx_LG, sdy_LG, sdz_LG],  [m]             [1]
+ [rxy, rxz, ryz],           [m]             [2]
+ [azi, vert, avst],         [gon, gon, m]   [3]
+ [sdazi, sdvert, sdavst],   [gon, m, m]     [4]
+ [rRdH, rRD, rDdH],         [gon / m]       [5]
+ [R, D, dH]]                [gon, m, m]     [6]
 
 """
 
@@ -548,9 +548,29 @@ gisline["stmoh"] = [[-2532.3500, -166.0425, 18.4962],
                     [-0.1416, -0.0795, -0.6493],
                     [202.74283, 2536.864, 18.864]]
 
-"""O1a()
+def O3a():
+    print("\n### Oppgave 3 ###\n\na)\n")
+    print("Baseline: Moholt -> TP342\n")
+    print("Lokalt koordinat for TP342: [" + str(gisline["mohtp"][0][0]) + ", " + str(gisline["mohtp"][0][1]) + ", " + str(gisline["mohtp"][0][2]) + "]")
+    print("Ellipsoidisk distanse: " + str(gisline["mohtp"][3][2]) + " m")
+    print("Azimuth: " + str(gisline["mohtp"][3][0] * 180 / 200) + " grader")
+    print("Senit-vinkel: " + str(gisline["mohtp"][3][1] * 180 / 200) + " grader")
+    print()
+    print("Baseline: ST46 -> Moholt\n")
+    print("Lokalt koordinat for Moholt: [" + str(gisline["stmoh"][0][0]) + ", " + str(gisline["stmoh"][0][1]) + ", " + str(gisline["stmoh"][0][2]) + "]")
+    print("Ellipsoidisk distanse: " + str(gisline["stmoh"][3][2]) + " m")
+    print("Azimuth: " + str(gisline["stmoh"][3][0] * 180 / 200) + " grader")
+    print("Senit-vinkel: " + str(gisline["stmoh"][3][1] * 180 / 200) + " grader")
+
+
+"""
+O1a()
 O1b()
 O1c()
 O1d()
 O2a()
-O2b()"""
+O2b()
+O3a()
+"""
+
+O3a()
