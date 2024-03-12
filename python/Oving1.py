@@ -552,16 +552,27 @@ def O3a():
     print("\n### Oppgave 3 ###\n\na)\n")
     print("Baseline: Moholt -> TP342\n")
     print("Lokalt koordinat for TP342: [" + str(gisline["mohtp"][0][0]) + ", " + str(gisline["mohtp"][0][1]) + ", " + str(gisline["mohtp"][0][2]) + "]")
-    print("Ellipsoidisk distanse: " + str(gisline["mohtp"][3][2]) + " m")
-    print("Azimuth: " + str(gisline["mohtp"][3][0] * 180 / 200) + " grader")
-    print("Senit-vinkel: " + str(gisline["mohtp"][3][1] * 180 / 200) + " grader")
+    print("Ellipsoidiske data:")
+    ### Disse lurer jeg på ###
+    print("Distanse:\t" + format(gisline["mohtp"][3][2], '.4f') + " m")
+    print("Azimuth:\t " + format(gisline["mohtp"][3][0] * 180 / 200, '.4f') + " grader")
+    print("Senit-vinkel:\t  " + format(gisline["mohtp"][3][1] * 180 / 200, '.4f') + " grader")
+    print("Korreksjoner til kartprojeksjon:")
+    ### ? ###
+    
+    # 
+    
     print()
     print("Baseline: ST46 -> Moholt\n")
     print("Lokalt koordinat for Moholt: [" + str(gisline["stmoh"][0][0]) + ", " + str(gisline["stmoh"][0][1]) + ", " + str(gisline["stmoh"][0][2]) + "]")
-    print("Ellipsoidisk distanse: " + str(gisline["stmoh"][3][2]) + " m")
-    print("Azimuth: " + str(gisline["stmoh"][3][0] * 180 / 200) + " grader")
-    print("Senit-vinkel: " + str(gisline["stmoh"][3][1] * 180 / 200) + " grader")
-
+    print("Ellipsoidiske data:")
+    ### Disse lurer jeg på ###
+    print("Distanse:\t" + format(gisline["stmoh"][3][2], '.4f') + " m")
+    print("Azimuth:\t " + format(gisline["stmoh"][3][0] * 180 / 200, '.4f') + " grader")
+    print("Senit-vinkel:\t  " + format(gisline["stmoh"][3][1] * 180 / 200, '.4f') + " grader")
+    ### ? ###
+    
+    # ...
 
 """
 O1a()
@@ -571,6 +582,6 @@ O1d()
 O2a()
 O2b()
 O3a()
-"""
+#"""
 
-O3a()
+#O3a()
