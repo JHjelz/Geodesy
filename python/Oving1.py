@@ -1,4 +1,4 @@
-# Øving 1
+### Øving 1 ###
 
 """
 GNSS Baselines
@@ -37,15 +37,6 @@ def deltaListe(a, b):
     ans = []
     for i in range(len(a)):
         ans.append(b[i] - a[i])
-    return ans
-
-def negativListe(l1):
-    """
-    Snur fortegn på alle verdiene i listen
-    """
-    ans = []
-    for i in l1:
-        ans.append(-i)
     return ans
 
 def gradTilrad(v):
