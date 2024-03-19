@@ -8,7 +8,7 @@ Fra GNSS baseline observasjoner til observasjoner i UTM kartprojeksjon og høyde
 
 # Importerer biblioteker:
 
-import numpy  as np
+import numpy as np
 
 import Hjelpefunksjoner as h
 import KoordinatKonvertering as koorkon
@@ -149,7 +149,7 @@ def correctedAzimuth(bl, B, L, FraUTM, TilUTM):
     """
     korC = correctionC(B, L)
     korDelta = correctionDelta(bl, B, FraUTM, TilUTM)
-    return (azimuth(bl) * 200 / np.pi - np.abs(korC) - np.abs(korDelta[0])) * 180 / 200
+    return azimuth(bl) * 180 / np.pi - np.abs(korC) - np.abs(korDelta[0])
 
 def correctionC(B, L):
     """
@@ -171,8 +171,8 @@ def correctionDelta(bl, B, p1, p2):
     Beregner korreksjonsleddet delta for korrigeringen av azimuth
     """
     R = r(B, azimuth(bl))
-    AB = radTilgrad(1 / (6 * R**2) * (2 * p1[1] + p2[1]) * (p2[0] - p1[0]))
-    BA = radTilgrad(1 / (6 * R**2) * (2 * p2[1] + p1[1]) * (p1[0] - p2[0]))
+    AB = radTilgrad(1 / (6 * R**2) * (2 * (p1[1] - 500000)/0.9996 + (p2[1] - 500000)/0.9996) * (p2[0] - p1[0])) # Korrigerer y for UTM-fellene
+    BA = radTilgrad(1 / (6 * R**2) * (2 * (p2[1] - 500000)/0.9996 + (p1[1] - 500000)/0.9996) * (p1[0] - p2[0]))
     return AB, BA
 
 def nu(B):
@@ -211,15 +211,31 @@ def partialDerivatives(bl):
     """
     Beregner partiellderiverte verdier for gitt baseline
     Returnerer transformasjonsmatrise som brukes for å finne standardavvik for utledede observasjoner
+    
+    [x, y, z] = lokale koordinat lik [dx, dy, dz] i baseline 'bl'.
+    
+    A = arctan(y / x)
+    => dA/dx = -y / (x^2 * ((y/x)^2 + 1)) og dA/dy = 1 / (x * (y/x)^2 + 1)
+    => dA/dx = -sin(azi) * rho / S_h (I) og dA/dy = cos(azi) * rho / S_h (II)
+
+    S_h = sqrt(x^2 + y^2)
+    => dS_h/dx = x / sqrt(x^2 + y^2) og dS_h/dy = y / sqrt(x^2 + y^2)
+    =A dS_h/dx = cos(azi) (III) og dS_h/dy = -sin(azi) (IV)
+
+    H = z = dH/dz = 1 (V)
     """
+
+    azi = azimuth(bl)
+    S_h = horizontalDistance(bl)
+    rho = 200 / np.pi # gon / rad
 
     ans = np.zeros(3 * 3).reshape(3, 3)
 
-    ans[0][0] = -bl[1] / (bl[0]**2 * ((bl[1]/bl[0])**2 + 1))
-    ans[0][1] = 1 / (bl[0] * ((bl[1]/bl[0])**2 + 1))
-    ans[1][0] = bl[0] / np.sqrt(bl[0]**2 + bl[1]**2)
-    ans[1][1] = bl[1] / np.sqrt(bl[0]**2 + bl[1]**2)
-    ans[2][2] = 1
+    ans[0][0] = -np.sin(azi) * rho / S_h # (I)
+    ans[0][1] = np.cos(azi) * rho / S_h # (II)
+    ans[1][0] = np.cos(azi) # (III)
+    ans[1][1] = -np.sin(azi) # (IV)
+    ans[2][2] = 1 # (V)
 
     return ans
 
@@ -316,8 +332,8 @@ def O1a():
     len3, len4 = slopeDistance(tp342LG), slopeDistance(moholtLG)
 
     print("\nKontrollsjekk:\n")
-    print("Differanse Moholt -> TP342:\t" + str(len1) + " m = " + str(len3) + " m,\tdiff = " + str(np.abs(len1 - len3)) + " m")
-    print("Differanse ST46 -> Moholt:\t" + str(len2) + " m = " + str(len4) + " m,\tdiff = " + str(np.abs(len2 - len4)) + " m")
+    print("Differanse Moholt -> TP342:\t" + str(len1) + " m = " + str(len3) + " m,\tdiff = " + str(np.abs(len1 - len3) * 10**3) + " mm")
+    print("Differanse ST46 -> Moholt:\t" + str(len2) + " m = " + str(len4) + " m,\tdiff = " + str(np.abs(len2 - len4) * 10**3) + " mm")
 
 # b)
 
@@ -330,7 +346,7 @@ def O1b():
     # Beregner korrigerte distanser:
 
     corrDistTP342 = correctedHorizontalDistance(tp342LG, bl_moholt[0], bl_moholt[2], [UTM_moholt[1], UTM_tp342[1]])
-    corrDistMoholt =  correctedHorizontalDistance(moholtLG, bl_st46[0], bl_st46[2], [UTM_st46[1], UTM_moholt[1]])
+    corrDistMoholt = correctedHorizontalDistance(moholtLG, bl_st46[0], bl_st46[2], [UTM_st46[1], UTM_moholt[1]])
 
     print("\n### Oppgave 1 ###\n\nb)\n")
     print("Korrigert distanse fra Moholt til TP342:\t" + str(corrDistTP342) + " m")
@@ -344,8 +360,8 @@ def O1b():
     control1, control2 = horizontalDistance(deltaListe(EUREF_moholt, EUREF_tp342)), horizontalDistance(deltaListe(EUREF_st46, EUREF_moholt))
 
     print("\nKontrollsjekk:\n")
-    print("Differanse Moholt -> TP342:\t" + str(corrDistTP342) + " m = " + str(control1) + " m,\tdiff = " + str(np.abs(control1 - corrDistTP342)) + " m")
-    print("Differanse ST46 -> Moholt:\t" + str(corrDistMoholt) + " m = " + str(control2) + " m,\tdiff = " + str(np.abs(control2 - corrDistMoholt)) + " m")
+    print("Differanse Moholt -> TP342:\t" + str(corrDistTP342) + " m = " + str(control1) + " m,\tdiff = " + str(np.abs(control1 - corrDistTP342) * 10**3) + " mm")
+    print("Differanse ST46 -> Moholt:\t" + str(corrDistMoholt) + " m = " + str(control2) + " m,\tdiff = " + str(np.abs(control2 - corrDistMoholt) * 10**3) + " mm")
 
 # c)
 
@@ -366,10 +382,10 @@ def O1c():
     corraziMoh = correctedAzimuth(moholtLG, bl_st46[0], bl_st46[1], UTM_st46[:2], UTM_moholt[:2])
 
     print("\n### Oppgave 1 ###\n\nc)\n")
-    print("Azimuth fra Moholt til TP342 uten korrigeringer:\t" + str(aziTP) + " grader")
-    print("Azimuth fra ST46 til Moholt uten korrigeringer:\t\t" + str(aziMoh) + " grader\n")
-    print("Korrigert azimuth fra Moholt til TP342:\t\t\t" + str(corraziTP) + " grader")
-    print("Korrigert azimuth fra ST46 til Moholt:\t\t\t" + str(corraziMoh) + " grader")
+    print("Azimuth fra Moholt til TP342 uten korrigeringer:\t" + str(aziTP * 200/180) + " gon")
+    print("Azimuth fra ST46 til Moholt uten korrigeringer:\t\t" + str(aziMoh * 200/180) + " gon\n")
+    print("Korrigert azimuth fra Moholt til TP342:\t\t\t" + str(corraziTP * 200/180) + " gon")
+    print("Korrigert azimuth fra ST46 til Moholt:\t\t\t" + str(corraziMoh * 200/180) + " gon")
 
     """
     Utfører kontroll ved å sammenligne de korrigerte azimuthene over med vanlig 
@@ -379,8 +395,8 @@ def O1c():
     control1, control2 = radTilgrad(azimuth(deltaListe(EUREF_moholt, EUREF_tp342))), radTilgrad(azimuth(deltaListe(EUREF_st46, EUREF_moholt)))
 
     print("\nKontrollsjekk:\n")
-    print("Differanse Moholt -> TP342:\t" + str(corraziTP) + " grader = " + str(control1) + " grader,\tdiff = " + str(np.abs(control1 - corraziTP)) + " grader")
-    print("Differanse ST46 -> Moholt:\t" + str(corraziMoh) + " grader = " + str(control2) + " grader,\tdiff = " + str(np.abs(control2 - corraziMoh)) + " grader")
+    print("Differanse Moholt -> TP342:\t" + str(corraziTP * 200/180) + " gon = " + str(control1 * 200/180) + " gon,\tdiff = " + str(np.abs(control1 - corraziTP) * 200/180 * 10**3) + " mgon")
+    print("Differanse ST46 -> Moholt:\t" + str(corraziMoh * 200/180) + " gon = " + str(control2 * 200/180) + " gon,\tdiff = " + str(np.abs(control2 - corraziMoh) * 200/180 * 10**3) + " mgon")
 
 # d)
 
@@ -407,8 +423,8 @@ def O1d():
     control1, control2 = EUREF_tp342[2] - EUREF_moholt[2], EUREF_moholt[2] - EUREF_st46[2]
 
     print("\nKontrollsjekk:\n")
-    print("Differanse Moholt -> TP342:\t" + str(corrDeltaHeightTP) + " m = " + str(control1) + " m,\t\tdiff = " + str(np.abs(control1 - corrDeltaHeightTP)) + " m")
-    print("Differanse ST46 -> Moholt:\t" + str(corrDeltaHeightMoh) + " m = " + str(control2) + " m,\tdiff = " + str(np.abs(control2 - corrDeltaHeightMoh)) + " m")
+    print("Differanse Moholt -> TP342:\t" + str(corrDeltaHeightTP) + " m = " + str(control1) + " m,\t\tdiff = " + str(np.abs(control1 - corrDeltaHeightTP) * 10**3) + " mm")
+    print("Differanse ST46 -> Moholt:\t" + str(corrDeltaHeightMoh) + " m = " + str(control2) + " m,\tdiff = " + str(np.abs(control2 - corrDeltaHeightMoh) * 10**3) + " mm")
 
 # e)
 
@@ -436,10 +452,10 @@ def O2a():
     C2_CTRS = RMS2**2 * Q2
 
     print("\n### Oppgave 2 ###\n\na)\n")
-    print("Varians-kovarians-matrise for baseline Moholt -> TP342:")
-    print(C1_CTRS)
-    print("\nVarians-kovarians-matrise for baseline ST46 -> Moholt:")
-    print(C2_CTRS)
+    print("Varians-kovarians-matrise for baseline Moholt -> TP342 [mm]:")
+    print(C1_CTRS * 10**6)
+    print("\nVarians-kovarians-matrise for baseline ST46 -> Moholt [mm]:")
+    print(C2_CTRS * 10**6)
 
 # b)
 
@@ -464,8 +480,10 @@ def O2b():
     C1_CTRS = RMS1**2 * Q1
     C2_CTRS = RMS2**2 * Q2
 
-    B1, L1 = bl_moholt[0], bl_moholt[1]
-    B2, L2 = bl_st46[0], bl_st46[1]
+    rho = np.pi / 180 # Gjør om til rad
+
+    B1, L1 = bl_moholt[0] * rho, bl_moholt[1] * rho
+    B2, L2 = bl_st46[0] * rho, bl_st46[1] * rho
 
     A1 = np.array([[-np.sin(B1)*np.cos(L1), -np.sin(B1)*np.sin(L1), np.cos(B1)],
                 [-np.sin(L1), np.cos(L1), 0],
@@ -477,30 +495,35 @@ def O2b():
 
     C1_LG = h.matrixMultiplication(h.matrixMultiplication(A1, C1_CTRS), h.transposeMatrix(A1))
     C2_LG = h.matrixMultiplication(h.matrixMultiplication(A2, C2_CTRS), h.transposeMatrix(A2))
-
+    
     """
-        [[dD/dx, dD/dy, dD/dz],
-    F =  [dB/dx, dB/dy, dB/dz],
+        [[dB/dx, dB/dy, dB/dz],
+    F =  [dD/dx, dD/dy, dD/dz],
          [dH/dx, dH/dy, dH/dz]]
     """
 
-    F1 =  partialDerivatives(dtp342)
-    F2 =  partialDerivatives(dmoholt)
+    #Konverterer til lokalt system:
+    
+    tp342LG = CTRS_til_LG(dtp342, bl_moholt[0], bl_moholt[1])
+    moholtLG = CTRS_til_LG(dmoholt, bl_st46[0], bl_st46[1])
+
+    F1 = partialDerivatives(tp342LG)
+    F2 = partialDerivatives(moholtLG)
 
     C1 = h.matrixMultiplication(h.matrixMultiplication(F1, C1_LG), h.transposeMatrix(F1))
     C2 = h.matrixMultiplication(h.matrixMultiplication(F2, C2_LG), h.transposeMatrix(F2))
 
     print("\n### Oppgave 2 ###\n\nb)\n")
-    print("Varians-kovarians-matrise for utledede observasjoner Moholt -> TP342:")
-    print(C1)
-    print("\nStandardavvik distanse i projeksjonsplanet: " +  str(np.sqrt(C1[0][0]) * 10**3) + " mm")
-    print("Standardavvik azimuth i projeksjonsplanet: " +  str(np.sqrt(C1[1][1]) * 10**3) + " mgrader")
-    print("Standardavvik høydedifferanse i NN2000: " +  str(np.sqrt(C1[2][2]) * 10**3) + " mm")
-    print("\nVarians-kovarians-matrise for utledede observasjoner ST46 -> Moholt:")
-    print(C2)
-    print("\nStandardavvik distanse i projeksjonsplanet: " +  str(np.sqrt(C2[0][0]) * 10**3) + " mm")
-    print("Standardavvik azimuth i projeksjonsplanet: " +  str(np.sqrt(C2[1][1]) * 10**3) + " mgrader")
-    print("Standardavvik høydedifferanse i NN2000: " +  str(np.sqrt(C2[2][2]) * 10**3) + " mm")
+    print("Varians-kovarians-matrise for utledede observasjoner Moholt -> TP342 [milli]:")
+    print(C1 * 10**6)
+    print("\nStandardavvik azimuth i projeksjonsplanet: " + str(np.sqrt(C1[0][0]) * 10**3 * 200/180) + " mgon")
+    print("Standardavvik høydedifferanse i NN2000: " + str(np.sqrt(C1[2][2]) * 10**3) + " mm")
+    print("Standardavvik distanse i projeksjonsplanet: " + str(np.sqrt(C1[1][1]) * 10**3) + " mm")
+    print("\nVarians-kovarians-matrise for utledede observasjoner ST46 -> Moholt [milli]:")
+    print(C2 * 10**6)
+    print("\nStandardavvik azimuth i projeksjonsplanet: " + str(np.sqrt(C2[0][0]) * 10**3 * 200/180) + " mgon")
+    print("Standardavvik høydedifferanse i NN2000: " + str(np.sqrt(C2[2][2]) * 10**3) + " mm")
+    print("Standardavvik distanse i projeksjonsplanet: " + str(np.sqrt(C2[1][1]) * 10**3) + " mm")
 
 # c)
 
@@ -517,9 +540,10 @@ dict[sted] =
  [sdx_LG, sdy_LG, sdz_LG],  [m]             [1]
  [rxy, rxz, ryz],           [m]             [2]
  [azi, vert, avst],         [gon, gon, m]   [3]
- [sdazi, sdvert, sdavst],   [gon, m, m]     [4]
+ [sdazi, sdvert, sdavst],   [gon, gon, m]   [4]
  [rRdH, rRD, rDdH],         [gon / m]       [5]
- [R, D, dH]]                [gon, m, m]     [6]
+ [Korreksjoner]             [gon / m]       [6]
+ [R, D, dH]]                [gon, m, m]     [7]
 
 """
 
@@ -529,6 +553,7 @@ gisline["mohtp"] = [[2046.5498, -2534.5363, -127.0737],
                     [343.24407, 102.48206, 3260.12088],
                     [0.00004, 0.00492, 0.00205],
                     [0.5064, 0.1281, 0.2575],
+                    [-1.42199, -0.00011, -2.4992, -1.1065, 0.01100],
                     [341.82198, 3256.515, -126.233]]
 
 gisline["stmoh"] = [[-2532.3500, -166.0425, 18.4962],
@@ -537,33 +562,93 @@ gisline["stmoh"] = [[-2532.3500, -166.0425, 18.4962],
                     [204.16826, 99.53602, 2537.85513],
                     [0.00002, 0.00290, 0.00130],
                     [-0.1416, -0.0795, -0.6493],
+                    [-1.42557, 0.00014, -0.1351, -0.8561, -0.13800],
                     [202.74283, 2536.864, 18.864]]
 
 def O3a():
-    print("\n### Oppgave 3 ###\n\na)\n")
+    ###
+    K1 = np.array([[1, gisline["mohtp"][2][0], gisline["mohtp"][2][1]],
+                   [gisline["mohtp"][2][0], 1, gisline["mohtp"][2][2]],
+                   [gisline["mohtp"][2][1], gisline["mohtp"][2][2], 1]])
+    K2 = np.array([[1, gisline["stmoh"][2][0], gisline["stmoh"][2][1]],
+                   [gisline["stmoh"][2][0], 1, gisline["stmoh"][2][2]],
+                   [gisline["stmoh"][2][1], gisline["stmoh"][2][2], 1]])
+    S1 = np.array([[gisline["mohtp"][1][0], 0, 0],
+                   [0, gisline["mohtp"][1][1], 0],
+                   [0, 0, gisline["mohtp"][1][2]]])
+    S2 = np.array([[gisline["mohtp"][1][0], 0, 0],
+                   [0, gisline["mohtp"][1][1], 0],
+                   [0, 0, gisline["mohtp"][1][2]]])
+    C1LG = S1 @ K1 @ S1
+    C2LG = S2 @ K2 @ S2
+
+    F1 = partialDerivatives(gisline["mohtp"][0])
+    F2 = partialDerivatives(gisline["stmoh"][0])
+
+    C1 = F1 @ C1LG @ h.transposeMatrix(F1)
+    C2 = F2 @ C2LG @ h.transposeMatrix(F2)
+
+    G1 = np.array([[1, gisline["mohtp"][5][1], gisline["mohtp"][5][0]],
+                   [gisline["mohtp"][5][1], 1, gisline["mohtp"][5][2]],
+                   [gisline["mohtp"][5][0], gisline["mohtp"][5][2], 1]])
+    G2 = np.array([[1, gisline["stmoh"][5][1], gisline["stmoh"][5][0]],
+                   [gisline["stmoh"][5][1], 1, gisline["stmoh"][5][2]],
+                   [gisline["stmoh"][5][0], gisline["stmoh"][5][2], 1]])
+    ###
+    print("### Oppgave 3 ###\n\na)\n")
     print("Baseline: Moholt -> TP342\n")
-    print("Lokalt koordinat for TP342: [" + str(gisline["mohtp"][0][0]) + ", " + str(gisline["mohtp"][0][1]) + ", " + str(gisline["mohtp"][0][2]) + "]")
+    print("Lokalt koordinat for TP342: [" + str(gisline["mohtp"][0][0]) + ", " + str(gisline["mohtp"][0][1]) + ", " + str(gisline["mohtp"][0][2]) + "] [m]")
     print("Ellipsoidiske data:")
-    ### Disse lurer jeg på ###
     print("Distanse:\t" + format(gisline["mohtp"][3][2], '.4f') + " m")
-    print("Azimuth:\t " + format(gisline["mohtp"][3][0] * 180 / 200, '.4f') + " grader")
-    print("Senit-vinkel:\t  " + format(gisline["mohtp"][3][1] * 180 / 200, '.4f') + " grader")
-    print("Korreksjoner til kartprojeksjon:")
-    ### ? ###
-    
-    # 
-    
+    print("Azimuth:\t " + format(gisline["mohtp"][3][0], '.4f') + " gon")
+    print("Senit-vinkel:\t  " + format(gisline["mohtp"][3][1], '.4f') + " gon")
+    print("Korreksjoner ellipsoide -> kartprojeksjon:")
+    print("Distanse: ellipse -> terreng: " + format(gisline["mohtp"][6][2], '.4f') + " m, og kartprojeksjon: " + format(gisline["mohtp"][6][3], '.4f') + " m")
+    print("Azimuth: konvergens meridian: " + format(gisline["mohtp"][6][0], '.4f') + " gon, og kartprojeksjon: " + format(gisline["mohtp"][6][1], '.4f') + " gon")
+    print("Senit-vinkel: loddavvik: " + format(gisline["mohtp"][6][4], '.4f') + " gon")
+    print("Observasjoner i kartplanet:")
+    print("Distanse:\t" + format(gisline["mohtp"][7][1], '.4f') + " m")
+    print("Azimuth:\t" + format(gisline["mohtp"][7][0], '.4f') + " gon")
+    print("Høydeforskjell:\t" + format(gisline["mohtp"][7][2], '.4f') + " m")
+    print("Nøyaktighet observasjoner:")
+    print("Beregnet varians-kovarians-matrise:")
+    print(C1)
+    print("Beregnet korrelasjonsmatrise:")
+    print(K1)
+    print("Korrelasjonsmatrise fra GISLINE:")
+    print(G1)
+    print("Sammenlignet beregnet varians med GISLINE-varians:")
+    print("Distanse:\t" + format(np.sqrt(C1[0][0]) * 10**3, '.4f') + " - " + format(gisline["mohtp"][4][2] * 10**3, '.4f') + " [mm]")
+    print("Azimuth:\t" + format(np.sqrt(C1[1][1]) * 10**3, '.4f') + " - " + format(gisline["mohtp"][4][0] * 10**3, '.4f') + " [mgon]")
+    print("Høydeforskjell:\t" + format(np.sqrt(C1[2][2]) * 10**3, '.4f') + " - " + format(gisline["mohtp"][4][1] * 10**3, '.4f') + " [mgon]")
     print()
     print("Baseline: ST46 -> Moholt\n")
-    print("Lokalt koordinat for Moholt: [" + str(gisline["stmoh"][0][0]) + ", " + str(gisline["stmoh"][0][1]) + ", " + str(gisline["stmoh"][0][2]) + "]")
+    print("Lokalt koordinat for Moholt: [" + str(gisline["stmoh"][0][0]) + ", " + str(gisline["stmoh"][0][1]) + ", " + str(gisline["stmoh"][0][2]) + "] [m]")
     print("Ellipsoidiske data:")
-    ### Disse lurer jeg på ###
     print("Distanse:\t" + format(gisline["stmoh"][3][2], '.4f') + " m")
-    print("Azimuth:\t " + format(gisline["stmoh"][3][0] * 180 / 200, '.4f') + " grader")
-    print("Senit-vinkel:\t  " + format(gisline["stmoh"][3][1] * 180 / 200, '.4f') + " grader")
-    ### ? ###
-    
-    # ...
+    print("Azimuth:\t " + format(gisline["stmoh"][3][0], '.4f') + " gon")
+    print("Senit-vinkel:\t  " + format(gisline["stmoh"][3][1], '.4f') + " gon")
+    print("Korreksjoner ellipsoide -> kartprojeksjon:")
+    print("Distanse: ellipse -> terreng: " + format(gisline["stmoh"][6][2], '.4f') + " m, og kartprojeksjon: " + format(gisline["stmoh"][6][3], '.4f') + " m")
+    print("Azimuth: konvergens meridian: " + format(gisline["stmoh"][6][0], '.4f') + " gon, og kartprojeksjon: " + format(gisline["stmoh"][6][1], '.4f') + " gon")
+    print("Senit-vinkel: loddavvik: " + format(gisline["stmoh"][6][4], '.4f') + " gon")
+    print("Observasjoner i kartplanet:")
+    print("Distanse:\t" + format(gisline["stmoh"][7][1], '.4f') + " m")
+    print("Azimuth:\t" + format(gisline["stmoh"][7][0], '.4f') + " gon")
+    print("Høydeforskjell:\t" + format(gisline["stmoh"][7][2], '.4f') + " m")
+    print("Nøyaktighet:")
+    print("Beregnet varians-kovarians-matrise:")
+    print(C2)
+    print("Beregnet korrelasjonsmatrise:")
+    print(K2)
+    print("Korrelasjonsmatrise fra GISLINE:")
+    print(G2)
+    print("Sammenlignet beregnet varians med GISLINE-varians:")
+    print("Distanse:\t" + format(np.sqrt(C2[0][0]) * 10**3, '.4f') + " - " + format(gisline["stmoh"][4][2] * 10**3, '.4f') + " [mm]")
+    print("Azimuth:\t" + format(np.sqrt(C2[1][1]) * 10**3, '.4f') + " - " + format(gisline["stmoh"][4][0] * 10**3, '.4f') + " [mgon]")
+    print("Høydeforskjell:\t" + format(np.sqrt(C2[2][2]) * 10**3, '.4f') + " - " + format(gisline["stmoh"][4][1] * 10**3, '.4f') + " [mgon]")
+
+# Kjøring av program:
 
 """
 O1a()
@@ -572,7 +657,5 @@ O1c()
 O1d()
 O2a()
 O2b()
+"""
 O3a()
-#"""
-
-#O3a()

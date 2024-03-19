@@ -55,22 +55,31 @@ for key in data:
     E0 = M_k
     E02 = M_k2
     for i in range(3):
-        E = E0 + (M_k - E0 + data[key][2] * np.sin(E0)) / (1 - data[key][2] * np.cos(E0))
-        E2 = E02 + (M_k2 - E02 + data[key][2] * np.sin(E02)) / (1 - data[key][2] * np.cos(E02))
-        E0 = E
-        E02 = E2
-    E_k = E
-    E_k2 = E2
+        E_k = E0 + (M_k - E0 + data[key][2] * np.sin(E0)) / (1 - data[key][2] * np.cos(E0))
+        E_k2 = E02 + (M_k2 - E02 + data[key][2] * np.sin(E02)) / (1 - data[key][2] * np.cos(E02))
+        E0 = E_k
+        E02 = E_k2
     
     f_k = 2 * np.arctan(np.sqrt((1 + data[key][2]) / (1 - data[key][2])) * np.tan(E_k / 2))
     f_k2 = 2 * np.arctan(np.sqrt((1 + data[key][2]) / (1 - data[key][2])) * np.tan(E_k2 / 2))
 
     u_k = data[key][4] + f_k + data[key][10] * np.cos(2 * (data[key][4] + f_k)) + data[key][11] * np.sin(2 * (data[key][4] + f_k))
-    r_k = data[key][1]**2 * (1 - data[key][2] * np.cos(E_k)) + data[key][12] * np.cos(2  * (data[key][4] + f_k)) + data[key][13] * np.sin(2 * (data[key][4] + f_k))
+    r_k = data[key][1]**2 * (1 - data[key][2] * np.cos(E_k)) + data[key][12] * np.cos(2 * (data[key][4] + f_k)) + data[key][13] * np.sin(2 * (data[key][4] + f_k))
     i_k = data[key][5] + data[key][8] * t_k + data[key][14] * np.cos(2 * (data[key][4] + f_k)) + data[key][15] * np.sin(2 * (data[key][4] + f_k))
     lambda_K = data[key][6] + (data[key][9] - omega_e) * t_k - omega_e * data[key][0]
+    
+    # [X^k, Y^k, Z^k] = R_3(-lambda_k) * R_1(-i_k) * R_3(-u_k) * [r_k, 0, 0]
 
-    koor = h.rotation3(h.rotation1(h.rotation3(np.array([r_k, 0, 0]), -u_k), -i_k), -lambda_K)
+    koor = np.array([[np.cos(-lambda_K), np.sin(-lambda_K), 0],
+                     [-np.sin(-lambda_K), np.cos(-lambda_K), 0],
+                     [0, 0, 1]]) \
+                        @ np.array([[1, 0, 0],
+                                    [0, np.cos(-i_k), np.sin(-i_k)],
+                                    [0, -np.sin(-i_k), np.cos(-i_k)]]) \
+                                        @ np.array([[np.cos(-u_k), np.sin(-u_k), 0],
+                                                    [-np.sin(-u_k), np.cos(-u_k), 0],
+                                                    [0, 0, 1]]) \
+                                                        @ np.array([r_k, 0, 0])
 
     koordinater[j] = koor
     
@@ -79,13 +88,22 @@ for key in data:
     i_k2 = data[key][5]
     lambda_K2 = data[key][6] - omega_e * t_k - omega_e * data[key][0]
 
-    koor2 = h.rotation3(h.rotation1(h.rotation3(np.array([r_k2, 0, 0]), -u_k2), -i_k2), -lambda_K2)
+    koor2 = np.array([[np.cos(-lambda_K2), np.sin(-lambda_K2), 0],
+                      [-np.sin(-lambda_K2), np.cos(-lambda_K2), 0],
+                      [0, 0, 1]]) \
+                        @ np.array([[1, 0, 0],
+                                    [0, np.cos(-i_k2), np.sin(-i_k2)],
+                                    [0, -np.sin(-i_k2), np.cos(-i_k2)]]) \
+                                        @ np.array([[np.cos(-u_k2), np.sin(-u_k2), 0],
+                                                    [-np.sin(-u_k2), np.cos(-u_k2), 0],
+                                                    [0, 0, 1]]) \
+                                                        @ np.array([r_k2, 0, 0])
 
     koordinater2[j] = koor2
 
-    j+= 1
+    j += 1
 
-"""
+#"""
 print("Estimerte koordinater for de fire satellittene med korreksjoner:")
 print(koordinater)
 print()
@@ -101,7 +119,7 @@ print()
 
 mottaker_0 = np.array(k.LatLonToCartesian(phi_r0, lambda_r0, h_r0, "WGS84"))
 
-"""
+#"""
 print("De antatte mottaker-koordinatene i kartesiske koordinater:")
 print(mottaker_0)
 print()
@@ -111,25 +129,81 @@ print()
 
 A = np.zeros((4, 4))
 L = np.zeros(4)
+dTr = 0
 
-xr0, yr0, zr0 = mottaker_0[0], mottaker_0[1], mottaker_0[2]
+iterasjon = True
+iterasjoner = 0
 
-j = 0
+while iterasjon:
 
-for key in data:
-    P = data[key][16]
-    Xj, Yj, Zj = koordinater[j][0], koordinater[j][1], koordinater[j][2]
+    xr0, yr0, zr0 = mottaker_0[0], mottaker_0[1], mottaker_0[2]
+
+    j = 0
+
+    for key in data:
+        P = data[key][16]
+        Xj, Yj, Zj = koordinater[j][0], koordinater[j][1], koordinater[j][2]
+        
+        A[j] = np.array([-(Xj - xr0) / rho(Xj, Yj, Zj, xr0, yr0, zr0),
+                         -(Yj - yr0) / rho(Xj, Yj, Zj, xr0, yr0, zr0),
+                         -(Zj - zr0) / rho(Xj, Yj, Zj, xr0, yr0, zr0),
+                         -c])
+        
+        L[j] = P - rho(Xj, Yj, Zj, xr0, yr0, zr0)
+
+        j += 1
     
-    A[j] = np.array([-(Xj - xr0) / rho(Xj, Yj, Zj, xr0, yr0, zr0),
-                     -(Yj - yr0) / rho(Xj, Yj, Zj, xr0, yr0, zr0),
-                     -(Zj - zr0) / rho(Xj, Yj, Zj, xr0, yr0, zr0),
-                     -c])
+    x_hat = h.inverseMatrix(A) @ L
+    iterasjoner += 1
     
-    L[j] = P - rho(Xj, Yj, Zj, xr0, yr0, zr0)
+    mottaker_0 += x_hat[:3]
+    dTr = x_hat[3]
 
-    j += 1
+    teller = 0
+    for val in x_hat:
+        if np.abs(val) < 0.0005:
+            teller += 1
+    if teller == 4:
+        iterasjon = False
 
-x_hat = h.inverseMatrix(A) @ L
+#"""
+print("Antall iterasjoner brukt i LSM: " + str(iterasjoner))
+print("Estimert posisjon / kartesiske koordinat for mottakeren:")
+print(mottaker_0)
+print()
+#"""
+
+### Oppgave 5 ###
 
 Q = h.inverseMatrix(h.transposeMatrix(A) @ A)
 
+diagonal3 = 0
+for i in range(3):
+    diagonal3 += Q[i][i]
+
+PDOP = np.sqrt(diagonal3)
+
+#"""
+print("Kofaktor-matrisen Q:")
+print(Q)
+print("Positional dilution of precision PDOP:")
+print(PDOP)
+print()
+#"""
+
+### Oppgave 6 ###
+
+mottaker = k.CartesianToLatLon(mottaker_0[0], mottaker_0[1], mottaker_0[2])
+
+#"""
+print("Mottakerens posisjon i bredde- og lengdegrader:")
+print(mottaker)
+print()
+#"""
+
+### Oppgave 7 ###
+
+#"""
+print("Estimert klokke-feil i mottakeren:")
+print(dTr * 10**9)
+#"""
