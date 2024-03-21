@@ -5,12 +5,14 @@ Program som kjører de faktiske oppgavene og konverteringsmulighetene
 """
 
 import KoordinatKonvertering as koorkon
+import Oving1 as O1
 
 # Konstanter som holder oversikt over programmets status:
 
 side = "hoved"
 valgHoved = ['1', '2', 'avslutt']
 valgKoor = ['a', 'b', 'c', 'd', 'e', 'f', 'tilbake', 'avslutt']
+valgO1 = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'tilbake', 'avslutt']
 jaNei = ['J', 'N']
 systemvalg = ['WGS84', 'ED50', 'ED87', 'NGO1948']
 
@@ -122,17 +124,56 @@ print("\n### ### ### ### ### ### ### ### ### ### ### ###")
 
 while (bruker != 'avslutt'):
     if (bruker == '1'):
-        side = "Oving 1"
+        side = "O1"
     
-    while (side == 'Oving 1'):
-        print("\nDu valgte '1'.\n")
+    while (side == 'O1'):
+        print("""\nDu kan nå se svarene for Øving 1.
+
+I denne øvinga har jeg valgt å studere følgende baselines:
+[] Moholt -> TP342
+[] ST46 -> Moholt
+
+Du har følgende valg:
+
+[a] Se lokale koordinat for TP342 og Moholt
+[b] Se korrigert distanse til kartplanet
+[c] Se korrigert azimuth til kartplanet
+[d] Se korrigert høydeforskjell i NN2000
+[e] Se varians-kovarians matrisen for [dX, dY, dZ] til baselinene
+[f] Se varians-kovarians matrisen for utledede observasjoner
+[g] Se sammenligning med data fra GISLINE Trans - Landmåling
+
+Skriv inn ønsket handling som en bokstav i input-feltet.
+        """)
         bruker = input("Nå vil jeg se: ")
         
-        ###################################
-        # TODO: Legg inn funksjonalitet her
-        ###################################
+        while (bruker not in valgO1):
+            print("\nUgyldig input! Prøv igjen")
+            bruker = input("Jeg vil utføre handling: ")
 
         side = avslutteEllerTilbake(bruker)
+
+        if (bruker == 'a'):
+            O1.O1a()
+            input()
+        elif (bruker == 'b'):
+            O1.O1b()
+            input()
+        elif (bruker ==  'c'):
+            O1.O1c()
+            input()
+        elif (bruker == 'd'):
+            O1.O1d()
+            input()
+        elif (bruker == 'e'):
+            O1.O2a()
+            input()
+        elif (bruker == 'f'):
+            O1.O2b()
+            input()
+        elif (bruker == 'g'):
+            O1.O3a()
+            input()
     
     if (bruker == '2'):
         side = "Koordinatkonverterer"

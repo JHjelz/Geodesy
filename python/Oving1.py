@@ -548,25 +548,24 @@ dict[sted] =
 """
 
 gisline["mohtp"] = [[2046.5498, -2534.5363, -127.0737],
-                    [0.0022, 0.0019, 0.0049],
+                    [0.0022*0.1, 0.0019*0.1, 0.0049*0.1],
                     [0.0138, 0.5263, 0.1381],
                     [343.24407, 102.48206, 3260.12088],
-                    [0.00004, 0.00492, 0.00205],
+                    [0.00004*0.1, 0.00492*0.1, 0.00205*0.1],
                     [0.5064, 0.1281, 0.2575],
                     [-1.42199, -0.00011, -2.4992, -1.1065, 0.01100],
                     [341.82198, 3256.515, -126.233]]
 
 gisline["stmoh"] = [[-2532.3500, -166.0425, 18.4962],
-                    [0.0013, 0.0009, 0.0029],
+                    [0.0013*0.1, 0.0009*0.1, 0.0029*0.1],
                     [-0.0367, 0.6394, 0.2007],
                     [204.16826, 99.53602, 2537.85513],
-                    [0.00002, 0.00290, 0.00130],
+                    [0.00002*0.1, 0.00290*0.1, 0.00130*0.1],
                     [-0.1416, -0.0795, -0.6493],
                     [-1.42557, 0.00014, -0.1351, -0.8561, -0.13800],
                     [202.74283, 2536.864, 18.864]]
 
 def O3a():
-    ###
     K1 = np.array([[1, gisline["mohtp"][2][0], gisline["mohtp"][2][1]],
                    [gisline["mohtp"][2][0], 1, gisline["mohtp"][2][2]],
                    [gisline["mohtp"][2][1], gisline["mohtp"][2][2], 1]])
@@ -576,9 +575,9 @@ def O3a():
     S1 = np.array([[gisline["mohtp"][1][0], 0, 0],
                    [0, gisline["mohtp"][1][1], 0],
                    [0, 0, gisline["mohtp"][1][2]]])
-    S2 = np.array([[gisline["mohtp"][1][0], 0, 0],
-                   [0, gisline["mohtp"][1][1], 0],
-                   [0, 0, gisline["mohtp"][1][2]]])
+    S2 = np.array([[gisline["stmoh"][1][0], 0, 0],
+                   [0, gisline["stmoh"][1][1], 0],
+                   [0, 0, gisline["stmoh"][1][2]]])
     C1LG = S1 @ K1 @ S1
     C2LG = S2 @ K2 @ S2
 
@@ -594,7 +593,19 @@ def O3a():
     G2 = np.array([[1, gisline["stmoh"][5][1], gisline["stmoh"][5][0]],
                    [gisline["stmoh"][5][1], 1, gisline["stmoh"][5][2]],
                    [gisline["stmoh"][5][0], gisline["stmoh"][5][2], 1]])
-    ###
+
+    K12 = np.zeros(K1.shape)
+    K22 = np.zeros(K2.shape)
+    
+    for i in range(len(K1)):
+        for j in range(len(K1[i])):
+            if i == j:
+                K12[i][j] = 1
+                K22[i][j] = 1
+            else:
+                K12[i][j] = C1[i][j] / np.sqrt(C1[i][i] * C1[j][j])
+                K22[i][j] = C2[i][j] / np.sqrt(C2[i][i] * C2[j][j])
+
     print("### Oppgave 3 ###\n\na)\n")
     print("Baseline: Moholt -> TP342\n")
     print("Lokalt koordinat for TP342: [" + str(gisline["mohtp"][0][0]) + ", " + str(gisline["mohtp"][0][1]) + ", " + str(gisline["mohtp"][0][2]) + "] [m]")
@@ -614,12 +625,12 @@ def O3a():
     print("Beregnet varians-kovarians-matrise:")
     print(C1)
     print("Beregnet korrelasjonsmatrise:")
-    print(K1)
+    print(K12)
     print("Korrelasjonsmatrise fra GISLINE:")
     print(G1)
     print("Sammenlignet beregnet varians med GISLINE-varians:")
-    print("Distanse:\t" + format(np.sqrt(C1[0][0]) * 10**3, '.4f') + " - " + format(gisline["mohtp"][4][2] * 10**3, '.4f') + " [mm]")
-    print("Azimuth:\t" + format(np.sqrt(C1[1][1]) * 10**3, '.4f') + " - " + format(gisline["mohtp"][4][0] * 10**3, '.4f') + " [mgon]")
+    print("Distanse:\t" + format(np.sqrt(C1[1][1]) * 10**3, '.4f') + " - " + format(gisline["mohtp"][4][2] * 10**3, '.4f') + " [mm]")
+    print("Azimuth:\t" + format(np.sqrt(C1[0][0]) * 10**3, '.4f') + " - " + format(gisline["mohtp"][4][0] * 10**3, '.4f') + " [mgon]")
     print("Høydeforskjell:\t" + format(np.sqrt(C1[2][2]) * 10**3, '.4f') + " - " + format(gisline["mohtp"][4][1] * 10**3, '.4f') + " [mgon]")
     print()
     print("Baseline: ST46 -> Moholt\n")
@@ -640,22 +651,10 @@ def O3a():
     print("Beregnet varians-kovarians-matrise:")
     print(C2)
     print("Beregnet korrelasjonsmatrise:")
-    print(K2)
+    print(K22)
     print("Korrelasjonsmatrise fra GISLINE:")
     print(G2)
     print("Sammenlignet beregnet varians med GISLINE-varians:")
-    print("Distanse:\t" + format(np.sqrt(C2[0][0]) * 10**3, '.4f') + " - " + format(gisline["stmoh"][4][2] * 10**3, '.4f') + " [mm]")
-    print("Azimuth:\t" + format(np.sqrt(C2[1][1]) * 10**3, '.4f') + " - " + format(gisline["stmoh"][4][0] * 10**3, '.4f') + " [mgon]")
+    print("Distanse:\t" + format(np.sqrt(C2[1][1]) * 10**3, '.4f') + " - " + format(gisline["stmoh"][4][2] * 10**3, '.4f') + " [mm]")
+    print("Azimuth:\t" + format(np.sqrt(C2[0][0]) * 10**3, '.4f') + " - " + format(gisline["stmoh"][4][0] * 10**3, '.4f') + " [mgon]")
     print("Høydeforskjell:\t" + format(np.sqrt(C2[2][2]) * 10**3, '.4f') + " - " + format(gisline["stmoh"][4][1] * 10**3, '.4f') + " [mgon]")
-
-# Kjøring av program:
-
-"""
-O1a()
-O1b()
-O1c()
-O1d()
-O2a()
-O2b()
-"""
-O3a()
