@@ -204,6 +204,6 @@ print()
 ### Oppgave 7 ###
 
 #"""
-print("Estimert klokke-feil i mottakeren:")
+print("Estimert klokke-feil i mottakeren [ns]:")
 print(dTr * 10**9)
 #"""
