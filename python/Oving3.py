@@ -24,16 +24,18 @@ data = [[2281478.131, 90170.993, 50.136, 0.00003205, 0.00002769, 0.00023304, -0.
         [2281478.125, 90170.976, 50.130, 0.00003218, 0.00002182, 0.00029197, 0.00000295, 0.00004603, 0.00001266],
         [2281478.127, 90170.970, 50.104, 0.00003853, 0.00001595, 0.00013528, 0.00000508, 0.00002023, 0.00000750]] # [m] og [m^2]
 
+lat, lon = 69.495870257, 19.248665575 # [deg]
+
+x0 = np.array([2281480, 90170, 50])
+
+### Oppgave 1 ###
+
 C_xyz_1 = np.array([[data[0][3], data[0][6], data[0][7]], [data[0][6], data[0][4], data[0][8]], [data[0][7], data[0][8], data[0][5]]]) # [m^2]
 C_xyz_2 = np.array([[data[1][3], data[1][6], data[1][7]], [data[1][6], data[1][4], data[1][8]], [data[1][7], data[1][8], data[1][5]]]) # [m^2]
 C_xyz_3 = np.array([[data[2][3], data[2][6], data[2][7]], [data[2][6], data[2][4], data[2][8]], [data[2][7], data[2][8], data[2][5]]]) # [m^2]
 C_xyz_4 = np.array([[data[3][3], data[3][6], data[3][7]], [data[3][6], data[3][4], data[3][8]], [data[3][7], data[3][8], data[3][5]]]) # [m^2]
 
 C_xyz = np.array([C_xyz_1, C_xyz_2, C_xyz_3, C_xyz_4])
-
-lat, lon = 69.495870257, 19.248665575 # [deg]
-
-### Oppgave 1 ###
 
 """
 print("De fire symmetriske varians-kovarians-matrisene:\n")
@@ -60,10 +62,8 @@ for i in range(len(C_neh)):
 
 n = 12
 e = 3
-f = n - e
 
-# E(l) = L0 - li
-# E(li) = li + vi = l0 <=> vi = l0 - li
+# E(li) = li + vi = x <=> vi = x - li, der x = l0
 
 A = np.array([[-1, 0, 0],
               [0, -1, 0],
@@ -88,9 +88,9 @@ Velger at n = 1 har p1 = p0 = 1.
 
 s0 = data[0][3:6]
 
-P = np.eye(n)
+P = np.zeros((n, n))
 for i in range(n):
-    P[i][i] = s0[i%3] / data[int((i - i % 3)/3)][i % 3 + 3]
+    P[i][i] = s0[i % 3] / data[int((i - i % 3)/3)][i % 3 + 3]
 
 f = np.array([-data[0][0],
               -data[0][1],
@@ -105,9 +105,16 @@ f = np.array([-data[0][0],
               -data[3][1],
               -data[3][2],])
 
+"""
+print(A)
+print()
+print(P)
+print()
+print(f)
+#"""
+
 ### Oppgave 4 ###
 
-x0 = np.array([2281480, 90170, 50])
 deltaX = np.zeros(3)
 iterate = True
 iteration = 0
@@ -127,13 +134,79 @@ while iterate:
     
     count = 0
     for val in x_hat:
-        if val < 10**(-9): #0.0005:
+        if np.abs(val) < 10**(-9): #0.0005:
             count += 1
     if count == len(x_hat):
         iterate = False
 
-"""
 svar = x0 + deltaX
-for i in range(len(svar)):
-    print(str(svar[i]) + " : " + str(x0[i]))
+
+"""
+print("Antall iterasjoner: " + str(iteration) + "\n")
+
+print("Estimert verdi LSM\tOppgitt verdi\tEstimert verdi gjennomsnitt:\n")
+
+for i in range(len(svar)):    
+    
+    val = 0
+    for j in range(len(data)): # Beregner gjennomsnitt
+        val += data[j][i]
+    
+    if i == 1:
+        s = "  "
+    elif i == 2:
+        s = "     "
+    else:
+        s = ""
+
+    print(s + format(svar[i], '.7f') + "\t\t" + s + str(x0[i]) + "\t\t" + s + format(val / len(data), '.7f'))
+
+print()
 #"""
+
+for i in range(n):
+    f[i] -= x0[i % 3]
+
+v = A @ svar - f
+
+sigma0 = np.sqrt(h.transposeMatrix(v) @ P @ v / (n - e))
+
+Q = h.inverseMatrix(h.transposeMatrix(A) @ P @ A)
+
+C = sigma0**2 * Q
+
+"""
+print("Standardavvik:")
+print("Nord: ", np.sqrt(C[0][0]), "m")
+print("Øst:  ", np.sqrt(C[1][1]), "m")
+print("Høyde:", np.sqrt(C[2][2]), "m")
+print()
+#"""
+
+### Oppgave 5 ###
+
+df = n - e # 12 - 3 = 9
+alpha = 0.05
+t = 2.262
+
+"""
+for i in range(len(svar)):
+    val = np.abs((svar[i] - x0[i]) / np.sqrt(C[i][i]))
+    print(val - t)
+    print((val - t) > 0)
+#"""
+
+### Oppgave 6 ###
+
+"""
+for i in range(len(v)):
+    s1, s2 = "", ""
+    if v[i] > 0:
+        s2 = " "
+    if i < 9:
+        s1 = " "
+    print("v" + str(i+1) + s1 + " = " + s2 + str(v[i]))
+#"""
+
+### Oppgave 7 ###
+
