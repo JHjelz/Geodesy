@@ -63,47 +63,58 @@ for i in range(len(C_neh)):
 n = 12
 e = 3
 
-# E(li) = li + vi = x <=> vi = x - li, der x = l0
+# E(li) = li + vi = x <=> vi = x - li, der x er vår ukjente og li er differansen mellom observasjoner og antatt verdi = l0
 
-A = np.array([[-1, 0, 0],
-              [0, -1, 0],
-              [0, 0, -1],
-              [-1, 0, 0],
-              [0, -1, 0],
-              [0, 0, -1],
-              [-1, 0, 0],
-              [0, -1, 0],
-              [0, 0, -1],
-              [-1, 0, 0],
-              [0, -1, 0],
-              [0, 0, -1]])
+A = np.array([[1, 0, 0],
+              [0, 1, 0],
+              [0, 0, 1],
+              [1, 0, 0],
+              [0, 1, 0],
+              [0, 0, 1],
+              [1, 0, 0],
+              [0, 1, 0],
+              [0, 0, 1],
+              [1, 0, 0],
+              [0, 1, 0],
+              [0, 0, 1]])
 
 """
-p0 = 1
+Vekter er relative, så det har ikke så mye å si hvilke verdier
+en bruker så lenge de samsvarer med målingene som er gjort
 
-p0*s0**2 = pn*sn**2 => pn = s0**2/sn**2
-
-Velger at n = 1 har p1 = p0 = 1.
+P = C^(-1)
 """
 
-s0 = data[0][3:6]
+for i in range(len(C_neh)):
+    C_neh[i] = h.inverseMatrix(C_neh[i])
+
+# Compute the maximum magnitude of the largest eigenvalue across all covariance matrices
+max_eigenvalue_magnitude = max(np.max(np.abs(np.linalg.eig(Ci)[0])) for Ci in C_neh)
+
+# Scale each covariance matrix by the maximum eigenvalue magnitude
+scaled_covariance_matrices = [Ci / max_eigenvalue_magnitude for Ci in C_neh]
 
 P = np.zeros((n, n))
-for i in range(n):
-    P[i][i] = s0[i % 3] / data[int((i - i % 3)/3)][i % 3 + 3]
+count = 0
 
-f = np.array([-data[0][0],
-              -data[0][1],
-              -data[0][2],
-              -data[1][0],
-              -data[1][1],
-              -data[1][2],
-              -data[2][0],
-              -data[2][1],
-              -data[2][2],
-              -data[3][0],
-              -data[3][1],
-              -data[3][2],])
+for C in scaled_covariance_matrices:
+    for j in range(3):
+        for k in range(3):
+            P[j + count * 3][k + count * 3] = C[j][k]
+    count += 1
+
+f = np.array([data[0][0]-x0[0],
+              data[0][1]-x0[1],
+              data[0][2]-x0[2],
+              data[1][0]-x0[0],
+              data[1][1]-x0[1],
+              data[1][2]-x0[2],
+              data[2][0]-x0[0],
+              data[2][1]-x0[1],
+              data[2][2]-x0[2],
+              data[3][0]-x0[0],
+              data[3][1]-x0[1],
+              data[3][2]-x0[2],])
 
 """
 print(A)
@@ -117,20 +128,16 @@ print(f)
 
 deltaX = np.zeros(3)
 iterate = True
-iteration = 0
-
-for i in range(n):
-    f[i] += x0[i % 3]
+iterations = 0
 
 while iterate:
-
     x_hat  = h.inverseMatrix(h.transposeMatrix(A) @ P @ A) @ h.transposeMatrix(A) @ P @ f
-    iteration += 1
+    iterations += 1
 
     deltaX += x_hat
 
     for i in range(n):
-        f[i] += x_hat[i % 3]
+        f[i] -= x_hat[i % 3]
     
     count = 0
     for val in x_hat:
@@ -139,10 +146,13 @@ while iterate:
     if count == len(x_hat):
         iterate = False
 
+    if iterations > 20:
+        break
+
 svar = x0 + deltaX
 
 """
-print("Antall iterasjoner: " + str(iteration) + "\n")
+print("Antall iterasjoner: " + str(iterations) + "\n")
 
 print("Estimert verdi LSM\tOppgitt verdi\tEstimert verdi gjennomsnitt:\n")
 
@@ -164,20 +174,23 @@ for i in range(len(svar)):
 print()
 #"""
 
-for i in range(n):
-    f[i] -= x0[i % 3]
-
-v = A @ svar - f
-
-sigma0 = np.sqrt(h.transposeMatrix(v) @ P @ v / (n - e))
+v = A @ deltaX - f
+sigma0 = np.sqrt(np.abs(h.transposeMatrix(v) @ P @ v / (n - e)))
 
 Q = h.inverseMatrix(h.transposeMatrix(A) @ P @ A)
 
 C = sigma0**2 * Q
 
-"""
+#"""
+print("Standardavvik av enhetsvekten:")
+print(sigma0)
+print("\nKofaktor-matrisen:")
+print(Q)
+print("\nVarians-kovarians-matrisen:")
+print(C)
+print()
 print("Standardavvik:")
-print("Nord: ", np.sqrt(C[0][0]), "m")
+print("Nord: ", np.sqrt(np.abs(C[0][0])), "m")
 print("Øst:  ", np.sqrt(C[1][1]), "m")
 print("Høyde:", np.sqrt(C[2][2]), "m")
 print()
