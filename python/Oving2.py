@@ -84,7 +84,7 @@ for key in data:
     koordinater[j] = koor
     
     u_k2 = data[key][4] + f_k2
-    r_k2 = data[key][1]**2 * (1 - data[key][2] * np.cos(E_k))
+    r_k2 = data[key][1]**2 * (1 - data[key][2] * np.cos(E_k2))
     i_k2 = data[key][5]
     lambda_K2 = data[key][6] - omega_e * t_k - omega_e * data[key][0]
 
