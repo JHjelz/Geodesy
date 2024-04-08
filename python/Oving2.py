@@ -18,6 +18,9 @@ from Appendix_2 import App_2 as data
 
 rho = lambda xj, yj, zj, x0, y0, z0: np.sqrt((xj - x0)**2 + (yj - y0)**2 + (zj - z0)**2)
 
+def distanse3D(liste):
+    return np.sqrt(liste[0]**2 + liste[1]**2 + liste[2]**2)
+
 # Data:
 
 t = 129600 # Epoch [sek]
@@ -113,6 +116,13 @@ print()
 print("Differanse mellom med og uten korreksjoner:")
 print(koordinater - koordinater2)
 print()
+#"""
+"""
+for ko in koordinater:
+    print(distanse3D(ko))
+print()
+for ko in koordinater2:
+    print(distanse3D(ko))
 #"""
 
 ### Oppgave 3 ###
