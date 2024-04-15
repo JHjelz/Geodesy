@@ -79,7 +79,7 @@ for i in range(len(C_xyz)):
     rho = np.pi / 180
     Rlat, Rlon = lat * rho, lon * rho
     R = np.array([[-np.sin(Rlat)*np.cos(Rlon), -np.sin(Rlat)*np.sin(Rlon), np.cos(Rlat)],
-                  [-np.sin(Rlon), np.cos(Rlat), 0],
+                  [-np.sin(Rlon), np.cos(Rlon), 0],
                   [np.cos(Rlat)*np.cos(Rlon), np.cos(Rlat)*np.sin(Rlon), np.sin(Rlat)]])
     C_neh[i] = R @ C_xyz[i] @ h.transposeMatrix(R)
 
@@ -119,10 +119,8 @@ P = C^(-1)
 
 P = np.zeros((n, n))
 
-scale = np.max(np.abs(h.inverseMatrix(C_neh)))
-
 for i in range(len(C_neh)):
-    P[i*3:(i+1)*3, i*3:(i+1)*3] = h.inverseMatrix(C_neh[i]) / scale
+    P[i*3:(i+1)*3, i*3:(i+1)*3] = h.inverseMatrix(C_neh[i])
 
 f = np.array([data[0][0]-x0[0],
               data[0][1]-x0[1],
@@ -249,10 +247,9 @@ while True:
     t = np.abs(nabla / sigma_nabla)
 
     alpha_tot = 0.05 # 5%
-    alpha = 1 - (1 - alpha_tot)**(1/n)
+    alpha = 1 - (1 - alpha_tot)**(1/(n - k))
     df = n - k - e - 1
-
-    T = studentT.ppf(1 - alpha, df)
+    T = studentT.ppf(1 - alpha / 2, df)
 
     newFeil = []
 
@@ -266,7 +263,7 @@ while True:
     feil.update(newFeil)
     k = len(feil)
 
-#"""
+"""
 print("Endelig T-grense:", T, "\n")
 for i in range(len(nabla)):
     print("Måling " + str(i+1) + " - nabla:\t", format(nabla[i], '.5f'))
@@ -277,15 +274,69 @@ for i in range(len(nabla)):
 
 ### Oppgave 6 ###
 
+I = np.eye(n - k)
+R = I - A @ h.inverseMatrix(h.transposeMatrix(A) @ P @ A) @ h.transposeMatrix(A) @ P
+
 """
-for i in range(len(v)):
-    s1, s2 = "", ""
-    if v[i] > 0:
-        s2 = " "
-    if i < 9:
-        s1 = " "
-    print("v" + str(i+1) + s1 + " = " + s2 + str(v[i]))
+for i in range(n-k):
+    print(R[i][i])
 #"""
 
 ### Oppgave 7 ###
 
+LRE = []
+
+T = studentT.ppf(1 - 0.05 / 2, 8)
+
+for i in range(n - k):
+    low = nabla[i] - sigma_nabla[i] * T
+    high = nabla[i] + sigma_nabla[i] * T
+    if np.abs(low) > np.abs(high):
+        LRE.append(low)
+    else:
+        LRE.append(high)
+
+"""
+for i in range(n-k):
+    print(LRE[i])
+#"""
+
+### Oppgave 8 ###
+
+nabla_x = np.zeros((n, e))
+
+for i in range(n - k):
+    nabla_max = np.zeros(n - k)
+    nabla_max[i] = LRE[i]
+    x = h.inverseMatrix(h.transposeMatrix(A) @ P @ A) @ h.transposeMatrix(A) @ P @ nabla_max
+    nabla_x[i] = x * 10**3
+
+# Målfunksjoner:
+
+# 1D er kun høyden h = z = nabla_x[i][2] for alle i
+
+# 2D:
+målfunksjon1 = lambda x, y: np.sqrt(x**2 + y**2)
+
+# 3D:
+målfunksjon2 = lambda x, y, z: np.sqrt(x**2 + y**2 + z**2)
+
+for i in range(n - k):
+    x, y, z = nabla_x[i][0], nabla_x[i][1], nabla_x[i][2]
+    nabla_x[i] = np.array([z, målfunksjon1(x, y), målfunksjon2(x, y, z)])
+
+max1, max2, max3 = 0, 0, 0
+
+for i in range(n - k):
+    if np.abs(nabla_x[i][0]) > max1:
+        max1 = np.abs(nabla_x[i][0])
+    if np.abs(nabla_x[i][1]) > max2:
+        max2 = np.abs(nabla_x[i][1])
+    if np.abs(nabla_x[i][2]) > max3:
+        max3 = np.abs(nabla_x[i][2])
+
+#"""
+print(max1)
+print(max2)
+print(max3)
+#"""

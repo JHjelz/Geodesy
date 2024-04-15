@@ -117,13 +117,6 @@ print("Differanse mellom med og uten korreksjoner:")
 print(koordinater - koordinater2)
 print()
 #"""
-"""
-for ko in koordinater:
-    print(distanse3D(ko))
-print()
-for ko in koordinater2:
-    print(distanse3D(ko))
-#"""
 
 ### Oppgave 3 ###
 
@@ -180,6 +173,15 @@ while iterasjon:
 print("Antall iterasjoner brukt i LSM: " + str(iterasjoner))
 print("Estimert posisjon / kartesiske koordinat for mottakeren:")
 print(mottaker_0)
+print()
+#"""
+#"""
+print("Distanse mellom de ulike satellittene og mottakeren, og 3D-forskjell av med og uten korreksjonskonstanter:")
+satellitter = ["SV 06", "SV 10", "SN 16", "SV 21"]
+for i in range(len(satellitter)):
+    print(satellitter[i] + ":\t", distanse3D(koordinater[i] - mottaker_0), "m,\t", distanse3D(koordinater[i] - koordinater2[i]), "m")
+    for j in range(len(koordinater[i])):
+        print(koordinater[i][j] - mottaker_0[j])
 print()
 #"""
 
