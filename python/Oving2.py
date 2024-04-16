@@ -18,6 +18,9 @@ from Appendix_2 import App_2 as data
 
 rho = lambda xj, yj, zj, x0, y0, z0: np.sqrt((xj - x0)**2 + (yj - y0)**2 + (zj - z0)**2)
 
+def distanse3D(liste):
+    return np.sqrt(liste[0]**2 + liste[1]**2 + liste[2]**2)
+
 # Data:
 
 t = 129600 # Epoch [sek]
@@ -170,6 +173,15 @@ while iterasjon:
 print("Antall iterasjoner brukt i LSM: " + str(iterasjoner))
 print("Estimert posisjon / kartesiske koordinat for mottakeren:")
 print(mottaker_0)
+print()
+#"""
+#"""
+print("Distanse mellom de ulike satellittene og mottakeren, og 3D-forskjell av med og uten korreksjonskonstanter:")
+satellitter = ["SV 06", "SV 10", "SN 16", "SV 21"]
+for i in range(len(satellitter)):
+    print(satellitter[i] + ":\t", distanse3D(koordinater[i] - mottaker_0), "m,\t", distanse3D(koordinater[i] - koordinater2[i]), "m")
+    for j in range(len(koordinater[i])):
+        print(koordinater[i][j] - mottaker_0[j])
 print()
 #"""
 

@@ -9,6 +9,7 @@ Beregne nøyaktig posisjon av punkt med GNSS-data og beregne nøyaktigheten av d
 # Importerer bibliotek:
 
 import numpy as np
+from scipy.stats import t as studentT
 
 import Hjelpefunksjoner as h
 
@@ -27,6 +28,32 @@ data = [[2281478.131, 90170.993, 50.136, 0.00003205, 0.00002769, 0.00023304, -0.
 lat, lon = 69.495870257, 19.248665575 # [deg]
 
 x0 = np.array([2281480, 90170, 50])
+
+# Funksjoner:
+
+def Normalligningene(A, P):
+    """
+    Beregner normalligningene N
+    """
+    return h.inverseMatrix(h.transposeMatrix(A) @ P @ A)
+
+def LSM(A, P, f):
+    """
+    Utfører LSM-prosedyren på A- og P-matrisene og f-vektoren
+    """
+    return Normalligningene(A, P) @ h.transposeMatrix(A) @ P @ f
+
+def Feilligningene(A, x, f):
+    """
+    Beregner feilleddene v fra LSM-prosedyren
+    """
+    return A @ x - f
+
+def s0(v, P, n, e):
+    """
+    Beregner standardavviket for enhetsvekten
+    """
+    return np.sqrt(h.transposeMatrix(v) @ P @ v / (n - e))
 
 ### Oppgave 1 ###
 
@@ -49,7 +76,12 @@ for i in range(len(C_xyz)):
 C_neh = np.zeros((4, 3, 3))
 
 for i in range(len(C_xyz)):
-    C_neh[i] = h.reflection2(h.rotation2(h.rotation3(C_xyz[i], lon - 180), lat - 90))
+    rho = np.pi / 180
+    Rlat, Rlon = lat * rho, lon * rho
+    R = np.array([[-np.sin(Rlat)*np.cos(Rlon), -np.sin(Rlat)*np.sin(Rlon), np.cos(Rlat)],
+                  [-np.sin(Rlon), np.cos(Rlon), 0],
+                  [np.cos(Rlat)*np.cos(Rlon), np.cos(Rlat)*np.sin(Rlon), np.sin(Rlat)]])
+    C_neh[i] = R @ C_xyz[i] @ h.transposeMatrix(R)
 
 """
 print("Varians-kovarians-matrisene gjort om til (N, E, H):\n")
@@ -85,23 +117,10 @@ en bruker så lenge de samsvarer med målingene som er gjort
 P = C^(-1)
 """
 
-for i in range(len(C_neh)):
-    C_neh[i] = h.inverseMatrix(C_neh[i])
-
-# Compute the maximum magnitude of the largest eigenvalue across all covariance matrices
-max_eigenvalue_magnitude = max(np.max(np.abs(np.linalg.eig(Ci)[0])) for Ci in C_neh)
-
-# Scale each covariance matrix by the maximum eigenvalue magnitude
-scaled_covariance_matrices = [Ci / max_eigenvalue_magnitude for Ci in C_neh]
-
 P = np.zeros((n, n))
-count = 0
 
-for C in scaled_covariance_matrices:
-    for j in range(3):
-        for k in range(3):
-            P[j + count * 3][k + count * 3] = C[j][k]
-    count += 1
+for i in range(len(C_neh)):
+    P[i*3:(i+1)*3, i*3:(i+1)*3] = h.inverseMatrix(C_neh[i])
 
 f = np.array([data[0][0]-x0[0],
               data[0][1]-x0[1],
@@ -114,46 +133,25 @@ f = np.array([data[0][0]-x0[0],
               data[2][2]-x0[2],
               data[3][0]-x0[0],
               data[3][1]-x0[1],
-              data[3][2]-x0[2],])
+              data[3][2]-x0[2]])
 
 """
+print("Designmatrisen A:")
 print(A)
-print()
+print("\nVektsmatrisen P:")
 print(P)
-print()
+print("\nObservasjonsvektoren f:")
 print(f)
+print()
 #"""
 
 ### Oppgave 4 ###
 
-deltaX = np.zeros(3)
-iterate = True
-iterations = 0
+x_hat = LSM(A, P, f)
 
-while iterate:
-    x_hat  = h.inverseMatrix(h.transposeMatrix(A) @ P @ A) @ h.transposeMatrix(A) @ P @ f
-    iterations += 1
-
-    deltaX += x_hat
-
-    for i in range(n):
-        f[i] -= x_hat[i % 3]
-    
-    count = 0
-    for val in x_hat:
-        if np.abs(val) < 10**(-9): #0.0005:
-            count += 1
-    if count == len(x_hat):
-        iterate = False
-
-    if iterations > 20:
-        break
-
-svar = x0 + deltaX
+svar = x0 + x_hat
 
 """
-print("Antall iterasjoner: " + str(iterations) + "\n")
-
 print("Estimert verdi LSM\tOppgitt verdi\tEstimert verdi gjennomsnitt:\n")
 
 for i in range(len(svar)):    
@@ -174,14 +172,14 @@ for i in range(len(svar)):
 print()
 #"""
 
-v = A @ deltaX - f
-sigma0 = np.sqrt(np.abs(h.transposeMatrix(v) @ P @ v / (n - e)))
+v = Feilligningene(A, x_hat, f)
+sigma0 = s0(v, P, n, e)
 
-Q = h.inverseMatrix(h.transposeMatrix(A) @ P @ A)
+Q = Normalligningene(A, P)
 
 C = sigma0**2 * Q
 
-#"""
+"""
 print("Standardavvik av enhetsvekten:")
 print(sigma0)
 print("\nKofaktor-matrisen:")
@@ -190,36 +188,155 @@ print("\nVarians-kovarians-matrisen:")
 print(C)
 print()
 print("Standardavvik:")
-print("Nord: ", np.sqrt(np.abs(C[0][0])), "m")
-print("Øst:  ", np.sqrt(C[1][1]), "m")
-print("Høyde:", np.sqrt(C[2][2]), "m")
+print("Nord: ", np.sqrt(C[0][0]), "m\t=\t", np.sqrt(C[0][0]) * 10**3, "mm")
+print("Øst:  ", np.sqrt(C[1][1]), "m\t=\t", np.sqrt(C[1][1]) * 10**3, "mm")
+print("Høyde:", np.sqrt(C[2][2]), "m\t=\t", np.sqrt(C[2][2]) * 10**3, "mm")
 print()
 #"""
 
 ### Oppgave 5 ###
 
-df = n - e # 12 - 3 = 9
-alpha = 0.05
-t = 2.262
+feil = set()
+k = len(feil)
+
+while True:
+    A_test = np.zeros((n - k, e))
+    P_test = np.zeros((n - k, n - k))
+    f_test = np.zeros(n - k)
+
+    next1 = 0
+
+    for i in range(n):
+        if i in feil:
+            continue
+        
+        next2 = 0
+        for j in range(e):
+            A_test[next1][next2] = A[i][j]
+            next2 += 1
+        
+        next3 = 0
+        for j in range(n):
+            if j in feil:
+                continue
+            P_test[next1][next3] = P[i][j]
+            next3 += 1
+        
+        f_test[next1] = f[i]
+        
+        next1 += 1
+
+    nabla = np.array([])
+    sigma_nabla = np.array([])
+
+    for i in range(n - k):
+        col = np.zeros(n - k)
+        col[i] = 1
+        
+        A_new = np.hstack((A_test, col.reshape(-1, 1)))
+        x_hat_test = LSM(A_new, P_test, f_test)
+
+        Q_test = Normalligningene(A_new, P_test)
+        v_test = Feilligningene(A_new, x_hat_test, f_test)
+        sigma0_test = s0(v_test, P_test, n - k, e + 1)
+        C_test = sigma0_test**2 * Q_test
+
+        nabla = np.hstack((nabla, x_hat_test[-1]))
+        sigma_nabla = np.hstack((sigma_nabla, np.sqrt(C_test[-1][-1])))
+
+    t = np.abs(nabla / sigma_nabla)
+
+    alpha_tot = 0.05 # 5%
+    alpha = 1 - (1 - alpha_tot)**(1/(n - k))
+    df = n - k - e - 1
+    T = studentT.ppf(1 - alpha / 2, df)
+
+    newFeil = []
+
+    for i in range(len(t)):
+        if t[i] > T and i not in feil:
+            newFeil.append(i)
+
+    if not newFeil:
+        break
+
+    feil.update(newFeil)
+    k = len(feil)
 
 """
-for i in range(len(svar)):
-    val = np.abs((svar[i] - x0[i]) / np.sqrt(C[i][i]))
-    print(val - t)
-    print((val - t) > 0)
+print("Endelig T-grense:", T, "\n")
+for i in range(len(nabla)):
+    print("Måling " + str(i+1) + " - nabla:\t", format(nabla[i], '.5f'))
+    print("Måling " + str(i+1) + " - sigma:\t", format(sigma_nabla[i], '.5f'))
+    print("Måling " + str(i+1) + " - t:\t\t", format(t[i], '.5f'))
+    print()
 #"""
 
 ### Oppgave 6 ###
 
+I = np.eye(n - k)
+R = I - A @ h.inverseMatrix(h.transposeMatrix(A) @ P @ A) @ h.transposeMatrix(A) @ P
+
 """
-for i in range(len(v)):
-    s1, s2 = "", ""
-    if v[i] > 0:
-        s2 = " "
-    if i < 9:
-        s1 = " "
-    print("v" + str(i+1) + s1 + " = " + s2 + str(v[i]))
+for i in range(n-k):
+    print(R[i][i])
 #"""
 
 ### Oppgave 7 ###
 
+LRE = []
+
+T = studentT.ppf(1 - 0.05 / 2, 8)
+
+for i in range(n - k):
+    low = nabla[i] - sigma_nabla[i] * T
+    high = nabla[i] + sigma_nabla[i] * T
+    if np.abs(low) > np.abs(high):
+        LRE.append(low)
+    else:
+        LRE.append(high)
+
+"""
+for i in range(n-k):
+    print(LRE[i])
+#"""
+
+### Oppgave 8 ###
+
+nabla_x = np.zeros((n, e))
+
+for i in range(n - k):
+    nabla_max = np.zeros(n - k)
+    nabla_max[i] = LRE[i]
+    x = h.inverseMatrix(h.transposeMatrix(A) @ P @ A) @ h.transposeMatrix(A) @ P @ nabla_max
+    nabla_x[i] = x * 10**3
+
+# Målfunksjoner:
+
+# 1D er kun høyden h = z = nabla_x[i][2] for alle i
+
+# 2D:
+målfunksjon1 = lambda x, y: np.sqrt(x**2 + y**2)
+
+# 3D:
+målfunksjon2 = lambda x, y, z: np.sqrt(x**2 + y**2 + z**2)
+
+for i in range(n - k):
+    x, y, z = nabla_x[i][0], nabla_x[i][1], nabla_x[i][2]
+    nabla_x[i] = np.array([z, målfunksjon1(x, y), målfunksjon2(x, y, z)])
+
+max1, max2, max3 = 0, 0, 0
+
+for i in range(n - k):
+    if np.abs(nabla_x[i][0]) > max1:
+        max1 = np.abs(nabla_x[i][0])
+    if np.abs(nabla_x[i][1]) > max2:
+        max2 = np.abs(nabla_x[i][1])
+    if np.abs(nabla_x[i][2]) > max3:
+        max3 = np.abs(nabla_x[i][2])
+
+#"""
+print(max1)
+print(max2)
+print(max3)
+#"""
