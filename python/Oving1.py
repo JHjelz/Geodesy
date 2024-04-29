@@ -174,8 +174,8 @@ def correctionDelta(bl, B, p1, p2):
     Beregner korreksjonsleddet delta for korrigeringen av azimuth
     """
     R = r(B, azimuth(bl))
-    AB = radTilgrad(1 / (6 * R**2) * (2 * (p1[1] - 500000)/0.9996 + (p2[1] - 500000)/0.9996) * (p2[0] - p1[0])) # Korrigerer y for UTM-fellene
-    BA = radTilgrad(1 / (6 * R**2) * (2 * (p2[1] - 500000)/0.9996 + (p1[1] - 500000)/0.9996) * (p1[0] - p2[0]))
+    AB = radTilgrad(1 / (6 * R**2) * (2 * (p1[1] - 500000)/0.9996 + (p2[1] - 500000)/0.9996) * (p2[0]/0.9996 - p1[0]/0.9996)) # Korrigerer x og y for UTM-fellene
+    BA = radTilgrad(1 / (6 * R**2) * (2 * (p2[1] - 500000)/0.9996 + (p1[1] - 500000)/0.9996) * (p1[0]/0.9996 - p2[0]/0.9996))
     return np.abs(AB), np.abs(BA)
 
 def nu(B):
