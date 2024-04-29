@@ -149,7 +149,10 @@ def correctedAzimuth(bl, B, L, FraUTM, TilUTM):
     """
     korC = correctionC(B, L)
     korDelta = correctionDelta(bl, B, FraUTM, TilUTM)
-    return azimuth(bl) * 180 / np.pi - np.abs(korC) - np.abs(korDelta[0])
+    azi = azimuth(bl)
+    if azi > np.pi/2 and azi < 3*np.pi/4:
+        return azi * 180 / np.pi - korC + korDelta[0]
+    return azi * 180 / np.pi - korC - korDelta[0]
 
 def correctionC(B, L):
     """
@@ -164,7 +167,7 @@ def correctionC(B, L):
     f2 = (l**3 / 3) * np.sin(B) * (np.cos(B))**2 * (1 + 3 * NU**2 + 2 * NU**4)
     f3 = (l**5 / 15) * np.sin(B) * (np.cos(B))**4 * (2 - (np.tan(B))**2)
     
-    return radTilgrad(f1 + f2 + f3)
+    return np.abs(radTilgrad(f1 + f2 + f3))
 
 def correctionDelta(bl, B, p1, p2):
     """
@@ -173,7 +176,7 @@ def correctionDelta(bl, B, p1, p2):
     R = r(B, azimuth(bl))
     AB = radTilgrad(1 / (6 * R**2) * (2 * (p1[1] - 500000)/0.9996 + (p2[1] - 500000)/0.9996) * (p2[0] - p1[0])) # Korrigerer y for UTM-fellene
     BA = radTilgrad(1 / (6 * R**2) * (2 * (p2[1] - 500000)/0.9996 + (p1[1] - 500000)/0.9996) * (p1[0] - p2[0]))
-    return AB, BA
+    return np.abs(AB), np.abs(BA)
 
 def nu(B):
     """
